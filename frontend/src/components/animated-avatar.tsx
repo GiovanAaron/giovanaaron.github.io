@@ -65,6 +65,9 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const morphAnimations = host.querySelectorAll<SVGAnimateElement>(
       "#animated-avatar-neutral animate[attributeName='d']",
     );
+    const eyeGroups = host.querySelectorAll<SVGGElement>(
+      "#neutral-left-eye, #neutral-right-eye, #smile-left-eye, #smile-right-eye",
+    );
     const headParts = host.querySelectorAll<SVGGElement>(
       "#neutral-head, #neutral-expression-suspicious-d362b6de, #neutral-Face, #neutral-glasses, #smile-head, #smile-expression-suspicious-d362b6de, #smile-Face, #smile-glasses",
     );
@@ -90,6 +93,44 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       part.style.transformBox = "view-box";
       part.style.transformOrigin = "285px 430px";
     });
+
+    let gazeX = 0;
+    let gazeY = 0;
+    let targetGazeX = 0;
+    let targetGazeY = 0;
+    let gazeFrame = 0;
+
+    const updateGazeTarget = (event: PointerEvent) => {
+      const svg = host.querySelector("svg");
+      if (!svg) return;
+
+      const bounds = svg.getBoundingClientRect();
+      const deltaX = event.clientX - (bounds.left + bounds.width / 2);
+      const deltaY = event.clientY - (bounds.top + bounds.height * 0.32);
+      const distance = Math.hypot(deltaX, deltaY) || 1;
+      const strength = Math.min(distance / 260, 1);
+
+      targetGazeX = (deltaX / distance) * 7 * strength;
+      targetGazeY = (deltaY / distance) * 5 * strength;
+    };
+
+    const resetGaze = () => {
+      targetGazeX = 0;
+      targetGazeY = 0;
+    };
+
+    const renderGaze = () => {
+      gazeX += (targetGazeX - gazeX) * 0.16;
+      gazeY += (targetGazeY - gazeY) * 0.16;
+      const transform = `translate(${gazeX.toFixed(2)} ${gazeY.toFixed(2)})`;
+      eyeGroups.forEach((eye) => eye.setAttribute("transform", transform));
+      gazeFrame = requestAnimationFrame(renderGaze);
+    };
+
+    window.addEventListener("pointermove", updateGazeTarget, { passive: true });
+    window.addEventListener("pointerleave", resetGaze);
+    window.addEventListener("blur", resetGaze);
+    gazeFrame = requestAnimationFrame(renderGaze);
 
     const morphExpression = (toSmile: boolean) => {
       morphAnimations.forEach((animation) => {
@@ -182,6 +223,10 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       cancelled = true;
       breath.getAnimations().forEach((animation) => animation.cancel());
       swayAnimations.forEach((animation) => animation.cancel());
+      cancelAnimationFrame(gazeFrame);
+      window.removeEventListener("pointermove", updateGazeTarget);
+      window.removeEventListener("pointerleave", resetGaze);
+      window.removeEventListener("blur", resetGaze);
     };
   }, [markup]);
 
