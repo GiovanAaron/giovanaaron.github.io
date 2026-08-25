@@ -1,69 +1,216 @@
-import Image from "next/image";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  CircleDollarSign,
+  PackageCheck,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
+
+import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
+import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const navItems = ["Home", "Products", "About Us", "Contacts"];
+
+function MetricCard({
+  className = "",
+  icon,
+  label,
+  value,
+  detail,
+}: {
+  className?: string;
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  detail: React.ReactNode;
+}) {
+  return (
+    <article
+      className={`border-border/80 bg-card text-card-foreground rounded-xl border p-4 shadow-[0_12px_35px_rgba(0,0,0,0.07)] ${className}`}
+    >
+      <div className="bg-muted mb-3 flex size-7 items-center justify-center rounded-md">
+        {icon}
+      </div>
+      <p className="text-muted-foreground text-xs font-medium">{label}</p>
+      <p className="mt-1 text-xl font-semibold tracking-tight">{value}</p>
+      <div className="text-muted-foreground mt-2 text-[11px]">{detail}</div>
+    </article>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="bg-background min-h-screen overflow-hidden">
+      <header className="relative z-30 mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-14">
+        <a
+          href="#"
+          className="flex items-center gap-3"
+          aria-label="Studio home"
+        >
+          <span className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-full">
+            <Sparkles className="size-4" />
+          </span>
+          <span className="text-base font-semibold tracking-tight">
+            Portfolio
+          </span>
+        </a>
+        <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+          <nav
+            className="hidden items-center gap-8 text-sm md:flex"
+            aria-label="Main navigation"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {navItems.map((item, index) => (
+              <a
+                key={item}
+                href={`#${item.toLowerCase().replaceAll(" ", "-")}`}
+                className={
+                  index === 0
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground transition-colors hover:text-foreground"
+                }
+              >
+                {item}
+              </a>
+            ))}
+          </nav>
+          <ThemeToggle />
         </div>
-      </main>
-    </div>
+      </header>
+
+      <section
+        className="relative mx-auto grid min-h-[610px] w-full max-w-[1440px] lg:grid-cols-[52%_48%]"
+        id="home"
+      >
+        <div className="relative z-20 flex items-center px-5 py-14 sm:px-8 lg:px-14 lg:py-8">
+          <div className="max-w-[650px]">
+            <span className="bg-primary text-primary-foreground inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em]">
+              Fullstack & Cloud Engineer
+            </span>
+            <h1 className="mt-5 text-[clamp(2.25rem,5vw,4.5rem)] leading-[0.92] font-bold tracking-[-0.055em]">
+              <span className="mb-3 block text-[0.52em] leading-none tracking-[-0.04em]">
+                Hello I&apos;m
+              </span>
+              Giovan Aaron
+              <span className="mt-4 block text-[0.47em] leading-[0.95] tracking-[-0.045em]">
+                Product Engineer
+              </span>
+            </h1>
+            <p className="text-muted-foreground mt-7 max-w-[650px] text-sm leading-7 sm:text-base">
+              I combine full-stack and cloud engineering with a creative UX/UI
+              perspective to turn complex ideas into clear, human-centred
+              digital products. My experience spans healthcare, mental
+              wellbeing, clean energy and social impact, supported by an MSc in
+              Management of Innovation and Professional Scrum Master
+              certification.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-7">
+              <a
+                href="#contact"
+                className="bg-primary text-primary-foreground inline-flex h-12 items-center gap-3 rounded-lg px-6 text-sm font-semibold shadow-sm transition-transform hover:-translate-y-0.5"
+              >
+                Let&apos;s Work Together <ArrowUpRight className="size-4" />
+              </a>
+              <div
+                className="flex items-center"
+                aria-label="More than one thousand happy clients"
+              >
+                {["AM", "JL", "RK"].map((initials) => (
+                  <span
+                    key={initials}
+                    className="border-background bg-secondary text-secondary-foreground -ml-2 flex size-9 first:ml-0 items-center justify-center rounded-full border-2 text-[9px] font-bold"
+                  >
+                    {initials}
+                  </span>
+                ))}
+                <span className="bg-card -ml-2 flex h-9 items-center rounded-full px-3 text-xs font-semibold shadow-sm">
+                  +1K
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative min-h-[590px] overflow-hidden bg-[#e9e9e9] transition-colors dark:bg-[#292929] lg:min-h-0 lg:rounded-bl-[150px]">
+          <PortfolioHeroImage />
+          {/* <MetricCard
+            className="absolute top-8 left-5 w-[170px] sm:left-8 lg:-left-4 lg:top-12"
+            icon={<PackageCheck className="size-4" />}
+            label="Shipped Orders"
+            value="42"
+            detail={
+              <>
+                <strong className="text-foreground">+18.2%</strong> &nbsp;than
+                last week
+              </>
+            }
+          />
+          <MetricCard
+            className="absolute top-24 right-4 w-[178px] sm:right-8 lg:top-28 lg:-right-2"
+            icon={<CircleDollarSign className="size-4" />}
+            label="Total Revenue"
+            value="$12,400"
+            detail={
+              <span className="inline-flex items-center gap-1">
+                <TrendingUp className="size-3" /> 15% this month
+              </span>
+            }
+          />
+          <MetricCard
+            className="absolute right-5 bottom-7 w-[158px] sm:right-10 lg:-right-1 lg:bottom-28"
+            icon={<TrendingUp className="size-4" />}
+            label="Total Income"
+            value="$4,673"
+            detail={<strong className="text-foreground">+25.2%</strong>}
+          /> */}
+          {/* <div className="bg-card/95 absolute bottom-8 left-5 hidden w-[190px] rounded-xl border p-4 shadow-lg sm:block lg:-left-8 lg:bottom-36">
+            <div className="flex items-center justify-between text-xs font-medium">
+              <span>Ratings</span>
+              <span className="text-muted-foreground flex items-center gap-1 text-[10px]">
+                Last 6 months <ChevronDown className="size-3" />
+              </span>
+            </div>
+            <div className="mt-4 flex items-end justify-between">
+              <strong className="text-xl">8.14k</strong>
+              <span className="text-xs font-semibold">+18.2%</span>
+              <span className="bg-muted flex size-11 items-center justify-center rounded-full text-xl">
+                ☺
+              </span>
+            </div>
+          </div> */}
+        </div>
+      </section>
+
+      <section
+        className="mx-auto w-full max-w-[1440px] px-5 pt-20 pb-12 text-center sm:px-8 lg:pt-24"
+        id="products"
+      >
+        <p className="text-muted-foreground text-sm">
+          Trusted by these great Companies
+        </p>
+        <div className="text-muted-foreground mx-auto mt-8 flex max-w-5xl flex-wrap items-center justify-center gap-x-10 gap-y-6 text-lg font-semibold sm:text-xl">
+          <span>◇ UCL </span>
+          <span> TechReturners </span>
+          <span className="font-serif text-2xl">Rendesco</span>
+          <span>● Unify Giving</span>
+          <span>● reddit</span>
+          <span>♙ Medium</span>
+          <span className="bg-muted text-foreground rounded px-2 py-1 text-sm">
+            DEV
+          </span>
+        </div>
+      </section>
+      <span id="about-us" className="sr-only">
+        About Us
+      </span>
+      <span id="contacts" className="sr-only">
+        Contacts
+      </span>
+      <span id="contact" className="sr-only">
+        Contact
+      </span>
+      <PortfolioCommandMenu />
+    </main>
   );
 }
