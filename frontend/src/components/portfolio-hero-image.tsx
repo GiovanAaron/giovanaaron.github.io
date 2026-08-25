@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Rotate3D } from "lucide-react";
 import { useState } from "react";
 
+import { AnimatedAvatar } from "@/components/animated-avatar";
+
 export function PortfolioHeroImage() {
   const [isFlipped, setIsFlipped] = useState(true);
 
@@ -27,13 +29,7 @@ export function PortfolioHeroImage() {
           </div>
 
           <div className="absolute inset-0 backface-hidden transform-[rotateY(180deg)]">
-            <Image
-              src="/assets/me-red-animated.svg"
-              alt="Illustrated portrait of John Smith"
-              fill
-              sizes="(max-width: 1024px) 100vw, 48vw"
-              className="object-contain object-bottom"
-            />
+            <AnimatedAvatar className="size-full" />
           </div>
         </div>
       </div>
