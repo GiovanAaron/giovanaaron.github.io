@@ -80,7 +80,8 @@ export function PortfolioCommandMenu() {
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="Ask about my work and experience..."
             aria-label="Ask about Giovan's experience"
-            className="h-full"
+            className="h-full light:placeholder:text-olive-800 placeholder:opacity-100"
+            // style={{backgroundColor: "white", color: "inherit"}}
           />
           <InputGroupAddon align="inline-end">
             <InputGroupButton type="submit" size="icon-sm" disabled={!question.trim() || isLoading} aria-label="Ask question" className="rounded-full">

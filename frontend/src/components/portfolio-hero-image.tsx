@@ -28,7 +28,7 @@ export function PortfolioHeroImage() {
 
           <div className="absolute inset-0 backface-hidden transform-[rotateY(180deg)]">
             <Image
-              src="/assets/me-red.svg"
+              src="/assets/me-red-animated.svg"
               alt="Illustrated portrait of John Smith"
               fill
               sizes="(max-width: 1024px) 100vw, 48vw"

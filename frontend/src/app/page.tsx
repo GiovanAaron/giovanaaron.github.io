@@ -86,7 +86,7 @@ export default function Home() {
         <div className="relative z-20 flex items-center px-5 py-14 sm:px-8 lg:px-14 lg:py-8">
           <div className="max-w-[650px]">
             <span className="bg-primary text-primary-foreground inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em]">
-              Fullstack & Cloud Engineer
+              Full-stack Development
             </span>
             <h1 className="mt-5 text-[clamp(2.25rem,5vw,4.5rem)] leading-[0.92] font-bold tracking-[-0.055em]">
               <span className="mb-3 block text-[0.52em] leading-none tracking-[-0.04em]">
