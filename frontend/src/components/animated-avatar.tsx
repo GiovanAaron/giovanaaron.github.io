@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const AVATAR_SOURCE = "/assets/me-red-animated.svg";
+const AVATAR_SOURCE = "/assets/new-me-red.svg";
+const EXPRESSION_SOURCE = "/assets/me-red-animated.svg";
 const BREATHS_BEFORE_SMILE = { min: 2, max: 6 };
 
 function randomBetween(min: number, max: number) {
@@ -13,12 +14,40 @@ function randomWholeNumber(min: number, max: number) {
   return Math.floor(randomBetween(min, max + 1));
 }
 
-function prepareInlineSvg(source: string) {
+function prepareInlineSvg(source: string, expressionSource: string) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
+  const expressionDocument = new DOMParser().parseFromString(
+    expressionSource,
+    "image/svg+xml",
+  );
   const svg = document.documentElement;
 
   // Timing is owned by this component, not by the standalone asset.
   svg.querySelector("style")?.remove();
+  expressionDocument
+    .querySelectorAll<SVGAnimateElement>(
+      "#animated-avatar-neutral animate[attributeName='d']",
+    )
+    .forEach((sourceAnimation) => {
+      const sourcePath = sourceAnimation.parentElement;
+      const targetPath = sourcePath?.id
+        ? svg.querySelector(`#${sourcePath.id}`)
+        : null;
+      if (targetPath) {
+        const animation = document.importNode(sourceAnimation, true);
+        const values = animation.getAttribute("values")?.split(";") ?? [];
+        const newNeutralPath = targetPath.getAttribute("d");
+        if (newNeutralPath && values.length >= 3) {
+          values[0] = newNeutralPath;
+          values[1] = newNeutralPath;
+          values[values.length - 2] = newNeutralPath;
+          values[values.length - 1] = newNeutralPath;
+          animation.setAttribute("values", values.join(";"));
+        }
+        targetPath.appendChild(animation);
+      }
+    });
+
   svg.querySelectorAll("animate").forEach((animation) => {
     animation.setAttribute("begin", "indefinite");
     animation.setAttribute("repeatCount", "1");
@@ -28,6 +57,20 @@ function prepareInlineSvg(source: string) {
   svg.setAttribute("height", "100%");
   svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
   svg.setAttribute("style", "display:block");
+
+  // The new artwork splits the upper arm and hand/forearm into separate
+  // branches. Wrapping their shared parent keeps every branch attached during
+  // breathing without imposing a second transform on either arm segment.
+  const neutral = svg.querySelector("#animated-avatar-neutral");
+  if (neutral?.parentNode) {
+    const breath = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "g",
+    );
+    breath.id = "animated-avatar-breath";
+    neutral.parentNode.insertBefore(breath, neutral);
+    breath.appendChild(neutral);
+  }
 
   return new XMLSerializer().serializeToString(svg);
 }
@@ -39,12 +82,14 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch(AVATAR_SOURCE, { signal: controller.signal })
-      .then((response) => {
+    Promise.all(
+      [AVATAR_SOURCE, EXPRESSION_SOURCE].map(async (source) => {
+        const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) throw new Error("Could not load the animated avatar");
         return response.text();
-      })
-      .then(prepareInlineSvg)
+      }),
+    )
+      .then(([avatar, expressions]) => prepareInlineSvg(avatar, expressions))
       .then(setMarkup)
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
@@ -72,10 +117,10 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       "#neutral-head, #neutral-expression-suspicious-d362b6de, #neutral-Face, #neutral-glasses, #smile-head, #smile-expression-suspicious-d362b6de, #smile-Face, #smile-glasses",
     );
 
-    if (!breath || !neutral || !smile) return;
+    if (!breath || !neutral) return;
 
     neutral.style.display = "block";
-    smile.style.display = "none";
+    if (smile) smile.style.display = "none";
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (reducedMotion.matches) return;
