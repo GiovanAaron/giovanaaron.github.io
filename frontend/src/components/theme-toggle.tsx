@@ -3,6 +3,8 @@
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { triggerAvatarSleeping } from "@/lib/avatar-state";
+
 const themeStorageKey = "portfolio-theme";
 
 export function ThemeToggle() {
@@ -25,6 +27,7 @@ export function ThemeToggle() {
     document.documentElement.classList.toggle("dark", nextIsDark);
     localStorage.setItem(themeStorageKey, nextIsDark ? "dark" : "light");
     setIsDark(nextIsDark);
+    if (nextIsDark) triggerAvatarSleeping();
   }
 
   return (

@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { AVATAR_THINKING_EVENT } from "@/lib/avatar-state";
+import {
+  AVATAR_SLEEPING_EVENT,
+  AVATAR_THINKING_EVENT,
+} from "@/lib/avatar-state";
 
 const AVATAR_SOURCE = "/assets/new-me-red.svg";
 const EXPRESSION_SOURCE = "/assets/me-red-animated.svg";
@@ -10,6 +13,7 @@ const THINKING_SOURCE = "/assets/me-red-animated-thinking.svg";
 const THINKING_EXPRESSION_SOURCE = "/assets/me-red-thinking-expression.svg";
 const CLOSED_EYES_SOURCE = "/assets/me-red-thinking-eyes-closed.svg";
 const ALTERNATE_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-2.svg";
+const SLEEPING_SOURCE = "/assets/me-red-sleeping.svg";
 const BREATHS_BEFORE_SMILE = { min: 2, max: 4 };
 const THINKING_EXPRESSION_PATHS = [
   "neutral-glasses-fill",
@@ -28,6 +32,39 @@ function randomWholeNumber(min: number, max: number) {
   return Math.floor(randomBetween(min, max + 1));
 }
 
+function rotateSimplePath(
+  path: string,
+  angleDegrees: number,
+  pivotX: number,
+  pivotY: number,
+) {
+  const tokens = path.match(/[A-Za-z]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? [];
+  const angle = (angleDegrees * Math.PI) / 180;
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  const transformed: string[] = [];
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (/^[A-Za-z]$/.test(token)) {
+      transformed.push(token);
+      continue;
+    }
+
+    const nextToken = tokens[index + 1];
+    if (!nextToken || /^[A-Za-z]$/.test(nextToken)) return path;
+    const x = Number(token) - pivotX;
+    const y = Number(nextToken) - pivotY;
+    transformed.push(
+      String(Number((pivotX + x * cosine - y * sine).toFixed(3))),
+      String(Number((pivotY + x * sine + y * cosine).toFixed(3))),
+    );
+    index += 1;
+  }
+
+  return transformed.join(" ");
+}
+
 function prepareInlineSvg(
   source: string,
   expressionSource: string,
@@ -35,6 +72,7 @@ function prepareInlineSvg(
   thinkingExpressionSource: string,
   closedEyesSource: string,
   alternateNeutralSource: string,
+  sleepingSource: string,
 ) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
   const expressionDocument = new DOMParser().parseFromString(
@@ -55,6 +93,10 @@ function prepareInlineSvg(
   );
   const alternateNeutralDocument = new DOMParser().parseFromString(
     alternateNeutralSource,
+    "image/svg+xml",
+  );
+  const sleepingDocument = new DOMParser().parseFromString(
+    sleepingSource,
     "image/svg+xml",
   );
   const svg = document.documentElement;
@@ -158,6 +200,32 @@ function prepareInlineSvg(
     animation.setAttribute("data-avatar-animation", "resting-eyelid");
     restingEyelid.appendChild(animation);
   }
+
+  const neutralMouth = svg.querySelector("#neutral-moustach-mouth");
+  const sleepingMouth =
+    sleepingDocument.querySelector("#neutral-moustach-mouth") ??
+    sleepingDocument.querySelectorAll("path")[22];
+  const neutralMouthPath = neutralMouth?.getAttribute("d");
+  const bakedSleepingMouthPath = sleepingMouth?.getAttribute("d");
+  if (neutralMouth && neutralMouthPath && bakedSleepingMouthPath) {
+    const sleepingMouthPath = rotateSimplePath(
+      bakedSleepingMouthPath,
+      19.237,
+      331.414,
+      470.816,
+    );
+    const animation = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "animate",
+    );
+    animation.setAttribute("attributeName", "d");
+    animation.setAttribute(
+      "values",
+      `${neutralMouthPath};${sleepingMouthPath}`,
+    );
+    animation.setAttribute("data-avatar-animation", "sleeping-mouth");
+    neutralMouth.appendChild(animation);
+  }
   importPathAnimations(
     thinkingDocument,
     "#neutral-upper-arm-outline > animate[attributeName='d']",
@@ -204,11 +272,17 @@ function prepareInlineSvg(
   if (firstHeadNode?.parentNode && headNodes.length === 4) {
     const sway = document.createElementNS("http://www.w3.org/2000/svg", "g");
     const tilt = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const sleepMotion = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "g",
+    );
     sway.id = "animated-avatar-head-sway";
     tilt.id = "animated-avatar-head-tilt";
+    sleepMotion.id = "animated-avatar-sleep-motion";
     firstHeadNode.parentNode.insertBefore(sway, firstHeadNode);
     sway.appendChild(tilt);
-    headNodes.forEach((node) => tilt.appendChild(node));
+    tilt.appendChild(sleepMotion);
+    headNodes.forEach((node) => sleepMotion.appendChild(node));
   }
 
   return new XMLSerializer().serializeToString(svg);
@@ -229,6 +303,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         THINKING_EXPRESSION_SOURCE,
         CLOSED_EYES_SOURCE,
         ALTERNATE_NEUTRAL_SOURCE,
+        SLEEPING_SOURCE,
       ].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) throw new Error("Could not load the animated avatar");
@@ -243,6 +318,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           thinkingExpression,
           closedEyes,
           alternateNeutral,
+          sleeping,
         ]) =>
           prepareInlineSvg(
             avatar,
@@ -251,6 +327,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             thinkingExpression,
             closedEyes,
             alternateNeutral,
+            sleeping,
           ),
       )
       .then(setMarkup)
@@ -285,6 +362,9 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const restingEyelidAnimation = host.querySelector<SVGAnimateElement>(
       "animate[data-avatar-animation='resting-eyelid']",
     );
+    const sleepingMouthAnimation = host.querySelector<SVGAnimateElement>(
+      "animate[data-avatar-animation='sleeping-mouth']",
+    );
     const thinkingArm = host.querySelector<SVGGElement>(
       "#neutral-right-hand-and-forearm",
     );
@@ -293,6 +373,9 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     );
     const thinkingHead = host.querySelector<SVGGElement>(
       "#animated-avatar-head-tilt",
+    );
+    const sleepMotion = host.querySelector<SVGGElement>(
+      "#animated-avatar-sleep-motion",
     );
     const eyeGroups = host.querySelectorAll<SVGGElement>(
       "#neutral-left-eye, #neutral-right-eye, #smile-left-eye, #smile-right-eye",
@@ -312,8 +395,10 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     let cancelled = false;
     let smiling = false;
     let thinkingActive = false;
+    let sleepingActive = false;
     let blinkTimer = 0;
     let eyelidTimer = 0;
+    let sleepTimer = 0;
     let alternateEyelidActive = false;
     let breathsUntilSmile = randomWholeNumber(
       BREATHS_BEFORE_SMILE.min,
@@ -652,7 +737,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     window.addEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
 
     const setRestingEyelid = (useAlternate: boolean) => {
-      if (!restingEyelidAnimation || thinkingActive) return;
+      if (!restingEyelidAnimation || thinkingActive || sleepingActive) return;
       const originalValues =
         restingEyelidAnimation.dataset.originalValues ??
         restingEyelidAnimation.getAttribute("values") ??
@@ -677,7 +762,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     };
 
     function scheduleRestingEyelid() {
-      if (thinkingActive) return;
+      if (thinkingActive || sleepingActive) return;
       const dwell = alternateEyelidActive
         ? randomBetween(9_000, 15_000)
         : randomBetween(3_000, 5_000);
@@ -690,6 +775,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     eyelidTimer = window.setTimeout(() => setRestingEyelid(true), 900);
 
     const blink = () => {
+      if (sleepingActive) return;
       blinkAnimations.forEach((animation) => {
         const originalValues =
           animation.dataset.originalValues ??
@@ -736,6 +822,179 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
     blinkTimer = window.setTimeout(blink, randomBetween(4_000, 7_000));
 
+    let sleepAnimations: Animation[] = [];
+    const startSleeping = () => {
+      if (!thinkingHead || !sleepMotion) return;
+
+      window.clearTimeout(sleepTimer);
+      window.clearTimeout(blinkTimer);
+      window.clearTimeout(eyelidTimer);
+      sleepAnimations.forEach((animation) => animation.cancel());
+      sleepAnimations = [];
+      sleepingActive = true;
+
+      const startedWhileThinking = thinkingActive;
+      const startedWhileSmiling = smiling;
+      if (thinkingActive) {
+        thinkingActive = false;
+        setThinkingPosture(false);
+      }
+      if (smiling) {
+        morphExpression(false);
+        smiling = false;
+      }
+
+      headTiltAnimation?.cancel();
+      thinkingHead.style.transformBox = "view-box";
+      thinkingHead.style.transformOrigin = "331.414px 470.816px";
+      sleepAnimations.push(
+        thinkingHead.animate(
+          [
+            {
+              transform: startedWhileThinking
+                ? "rotate(10.983deg)"
+                : "rotate(0deg)",
+            },
+            { transform: "rotate(-19.237deg)" },
+          ],
+          {
+            duration: 650,
+            easing: "cubic-bezier(.45, 0, .25, 1)",
+            fill: "forwards",
+          },
+        ),
+      );
+
+      blinkAnimations.forEach((animation) => {
+        const originalValues =
+          animation.dataset.originalValues ??
+          animation.getAttribute("values") ??
+          "";
+        animation.dataset.originalValues = originalValues;
+        const [openPath, closedPath] = originalValues.split(";");
+        if (!openPath || !closedPath) return;
+        animation.setAttribute("values", `${openPath};${closedPath}`);
+        animation.setAttribute("keyTimes", "0;1");
+        animation.setAttribute("keySplines", ".45 0 .55 1");
+        animation.setAttribute("calcMode", "spline");
+        animation.setAttribute("dur", "650ms");
+        animation.setAttribute("fill", "freeze");
+        animation.beginElement();
+      });
+
+      if (sleepingMouthAnimation) {
+        const originalValues =
+          sleepingMouthAnimation.dataset.originalValues ??
+          sleepingMouthAnimation.getAttribute("values") ??
+          "";
+        sleepingMouthAnimation.dataset.originalValues = originalValues;
+        const [neutralMouthPath, sleepingMouthPath] = originalValues.split(";");
+        if (neutralMouthPath && sleepingMouthPath) {
+          let startingMouthPath = neutralMouthPath;
+          if (startedWhileThinking) {
+            const thinkingMouth = Array.from(thinkingExpressionAnimations).find(
+              (animation) =>
+                animation.parentElement?.id === "neutral-moustach-mouth",
+            );
+            startingMouthPath =
+              thinkingMouth?.dataset.originalValues?.split(";")[1] ??
+              startingMouthPath;
+          } else if (startedWhileSmiling) {
+            const smilingMouth = Array.from(morphAnimations).find(
+              (animation) =>
+                animation.parentElement?.id === "neutral-moustach-mouth",
+            );
+            startingMouthPath =
+              smilingMouth?.dataset.originalValues?.split(";")[2] ??
+              startingMouthPath;
+          }
+
+          sleepingMouthAnimation.setAttribute(
+            "values",
+            `${startingMouthPath};${sleepingMouthPath}`,
+          );
+          sleepingMouthAnimation.setAttribute("keyTimes", "0;1");
+          sleepingMouthAnimation.setAttribute("keySplines", ".45 0 .55 1");
+          sleepingMouthAnimation.setAttribute("calcMode", "spline");
+          sleepingMouthAnimation.setAttribute("dur", "650ms");
+          sleepingMouthAnimation.beginElement();
+        }
+      }
+
+      sleepTimer = window.setTimeout(() => {
+        sleepMotion.style.transformBox = "view-box";
+        sleepMotion.style.transformOrigin = "220px 300px";
+        const snoreAnimation = sleepMotion.animate(
+          [
+            { transform: "translateY(0) rotate(0deg) scale(1, 1)" },
+            {
+              transform:
+                "translateY(1.4px) rotate(-0.18deg) scale(1.003, 1.006)",
+            },
+            { transform: "translateY(0) rotate(0deg) scale(1, 1)" },
+          ],
+          {
+            duration: 750,
+            easing: "ease-in-out",
+            iterations: 4,
+          },
+        );
+        sleepAnimations.push(
+          snoreAnimation,
+        );
+
+        sleepTimer = window.setTimeout(() => {
+          snoreAnimation.cancel();
+          sleepAnimations.push(
+            thinkingHead.animate(
+              [
+                { transform: "rotate(-19.237deg)" },
+                { transform: "rotate(0deg)" },
+              ],
+              {
+                duration: 650,
+                easing: "cubic-bezier(.45, 0, .25, 1)",
+                fill: "forwards",
+              },
+            ),
+          );
+          blinkAnimations.forEach((animation) => {
+            const [openPath, closedPath] =
+              animation.dataset.originalValues?.split(";") ?? [];
+            if (!openPath || !closedPath) return;
+            animation.setAttribute("values", `${closedPath};${openPath}`);
+            animation.setAttribute("dur", "650ms");
+            animation.beginElement();
+          });
+          if (sleepingMouthAnimation) {
+            const [neutralMouthPath, sleepingMouthPath] =
+              sleepingMouthAnimation.dataset.originalValues?.split(";") ?? [];
+            if (neutralMouthPath && sleepingMouthPath) {
+              sleepingMouthAnimation.setAttribute(
+                "values",
+                `${sleepingMouthPath};${neutralMouthPath}`,
+              );
+              sleepingMouthAnimation.setAttribute("dur", "650ms");
+              sleepingMouthAnimation.beginElement();
+            }
+          }
+
+          sleepTimer = window.setTimeout(() => {
+            sleepAnimations.forEach((animation) => animation.cancel());
+            sleepAnimations = [];
+            blinkAnimations.forEach((animation) =>
+              animation.setAttribute("fill", "remove"),
+            );
+            sleepingActive = false;
+            scheduleRestingEyelid();
+            blinkTimer = window.setTimeout(blink, randomBetween(4_000, 7_000));
+          }, 650);
+        }, 3_000);
+      }, 650);
+    };
+
+    window.addEventListener(AVATAR_SLEEPING_EVENT, startSleeping);
+
     const swayAnimations = Array.from(headParts, (part) =>
       part.animate(
         [
@@ -777,7 +1036,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         }
         if (cancelled) break;
 
-        if (thinkingActive) continue;
+        if (thinkingActive || sleepingActive) continue;
 
         // Expressions only change here, after exhale and rest have completed.
         if (smiling) {
@@ -810,10 +1069,13 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       cancelAnimationFrame(gazeFrame);
       window.clearTimeout(blinkTimer);
       window.clearTimeout(eyelidTimer);
+      window.clearTimeout(sleepTimer);
+      sleepAnimations.forEach((animation) => animation.cancel());
       window.removeEventListener("pointermove", updateGazeTarget);
       window.removeEventListener("pointerleave", resetGaze);
       window.removeEventListener("blur", resetGaze);
       window.removeEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
+      window.removeEventListener(AVATAR_SLEEPING_EVENT, startSleeping);
     };
   }, [markup]);
 
