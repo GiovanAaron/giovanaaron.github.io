@@ -9,6 +9,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { setAvatarThinking } from "@/lib/avatar-state";
 
 function getLocalAnswer(question: string) {
   const normalizedQuestion = question.toLowerCase();
@@ -37,8 +38,10 @@ export function PortfolioCommandMenu() {
 
     setIsLoading(true);
     setAnswer("");
-    await new Promise((resolve) => window.setTimeout(resolve, 450));
+    setAvatarThinking(true);
+    await new Promise((resolve) => window.setTimeout(resolve, 7000));
     setAnswer(getLocalAnswer(submittedQuestion));
+    setAvatarThinking(false);
     setIsLoading(false);
   }
 

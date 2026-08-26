@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { AVATAR_THINKING_EVENT } from "@/lib/avatar-state";
+
 const AVATAR_SOURCE = "/assets/new-me-red.svg";
 const EXPRESSION_SOURCE = "/assets/me-red-animated.svg";
+const THINKING_SOURCE = "/assets/me-red-animated-thinking.svg";
 const BREATHS_BEFORE_SMILE = { min: 2, max: 6 };
 
 function randomBetween(min: number, max: number) {
@@ -14,39 +17,59 @@ function randomWholeNumber(min: number, max: number) {
   return Math.floor(randomBetween(min, max + 1));
 }
 
-function prepareInlineSvg(source: string, expressionSource: string) {
+function prepareInlineSvg(
+  source: string,
+  expressionSource: string,
+  thinkingSource: string,
+) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
   const expressionDocument = new DOMParser().parseFromString(
     expressionSource,
+    "image/svg+xml",
+  );
+  const thinkingDocument = new DOMParser().parseFromString(
+    thinkingSource,
     "image/svg+xml",
   );
   const svg = document.documentElement;
 
   // Timing is owned by this component, not by the standalone asset.
   svg.querySelector("style")?.remove();
-  expressionDocument
-    .querySelectorAll<SVGAnimateElement>(
-      "#animated-avatar-neutral animate[attributeName='d']",
-    )
-    .forEach((sourceAnimation) => {
-      const sourcePath = sourceAnimation.parentElement;
-      const targetPath = sourcePath?.id
-        ? svg.querySelector(`#${sourcePath.id}`)
-        : null;
-      if (targetPath) {
-        const animation = document.importNode(sourceAnimation, true);
-        const values = animation.getAttribute("values")?.split(";") ?? [];
-        const newNeutralPath = targetPath.getAttribute("d");
-        if (newNeutralPath && values.length >= 3) {
-          values[0] = newNeutralPath;
-          values[1] = newNeutralPath;
-          values[values.length - 2] = newNeutralPath;
-          values[values.length - 1] = newNeutralPath;
-          animation.setAttribute("values", values.join(";"));
+  const importPathAnimations = (
+    sourceDocument: Document,
+    selector: string,
+  ) => {
+    sourceDocument
+      .querySelectorAll<SVGAnimateElement>(selector)
+      .forEach((sourceAnimation) => {
+        const sourcePath = sourceAnimation.parentElement;
+        const targetPath = sourcePath?.id
+          ? svg.querySelector(`#${sourcePath.id}`)
+          : null;
+        if (targetPath) {
+          const animation = document.importNode(sourceAnimation, true);
+          const values = animation.getAttribute("values")?.split(";") ?? [];
+          const newNeutralPath = targetPath.getAttribute("d");
+          if (newNeutralPath && values.length >= 3) {
+            values[0] = newNeutralPath;
+            values[1] = newNeutralPath;
+            values[values.length - 2] = newNeutralPath;
+            values[values.length - 1] = newNeutralPath;
+            animation.setAttribute("values", values.join(";"));
+          }
+          targetPath.appendChild(animation);
         }
-        targetPath.appendChild(animation);
-      }
-    });
+      });
+  };
+
+  importPathAnimations(
+    expressionDocument,
+    "#animated-avatar-neutral animate[attributeName='d']",
+  );
+  importPathAnimations(
+    thinkingDocument,
+    "#neutral-upper-arm-outline > animate[attributeName='d']",
+  );
 
   svg.querySelectorAll("animate").forEach((animation) => {
     animation.setAttribute("begin", "indefinite");
@@ -83,13 +106,15 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const controller = new AbortController();
 
     Promise.all(
-      [AVATAR_SOURCE, EXPRESSION_SOURCE].map(async (source) => {
+      [AVATAR_SOURCE, EXPRESSION_SOURCE, THINKING_SOURCE].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) throw new Error("Could not load the animated avatar");
         return response.text();
       }),
     )
-      .then(([avatar, expressions]) => prepareInlineSvg(avatar, expressions))
+      .then(([avatar, expressions, thinking]) =>
+        prepareInlineSvg(avatar, expressions, thinking),
+      )
       .then(setMarkup)
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
@@ -108,7 +133,16 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const neutral = host.querySelector<SVGGElement>("#animated-avatar-neutral");
     const smile = host.querySelector<SVGGElement>("#animated-avatar-smile");
     const morphAnimations = host.querySelectorAll<SVGAnimateElement>(
-      "#animated-avatar-neutral animate[attributeName='d']",
+      "#neutral-eyebrow > animate[attributeName='d'], #neutral-moustach-mouth > animate[attributeName='d']",
+    );
+    const armMorphAnimation = host.querySelector<SVGAnimateElement>(
+      "#neutral-upper-arm-outline > animate[attributeName='d']",
+    );
+    const thinkingArm = host.querySelector<SVGGElement>(
+      "#neutral-right-hand-and-forearm",
+    );
+    const thinkingElbow = host.querySelector<SVGGElement>(
+      "#neutral-elbow-anchor",
     );
     const eyeGroups = host.querySelectorAll<SVGGElement>(
       "#neutral-left-eye, #neutral-right-eye, #smile-left-eye, #smile-right-eye",
@@ -203,6 +237,93 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       });
     };
 
+    let armAnimation: Animation | null = null;
+    let elbowAnimation: Animation | null = null;
+
+    if (thinkingElbow) {
+      thinkingElbow.style.transformBox = "view-box";
+      thinkingElbow.style.transformOrigin = "486.739px 652.787px";
+      thinkingElbow.style.transform = "translate(-10px, -33px)";
+    }
+
+    const setThinkingPosture = (isThinking: boolean) => {
+      if (!thinkingArm || !thinkingElbow || reducedMotion.matches) return;
+
+      const postureDuration = isThinking ? 1_067 : 1_600;
+
+      armAnimation?.cancel();
+      elbowAnimation?.cancel();
+      thinkingArm.style.transformBox = "view-box";
+      thinkingArm.style.transformOrigin = "486.739px 652.787px";
+      armAnimation = thinkingArm.animate(
+        [
+          {
+            transform: isThinking
+              ? "rotate(0deg)"
+              : "rotate(125.869deg)",
+          },
+          {
+            transform: isThinking
+              ? "rotate(125.869deg)"
+              : "rotate(0deg)",
+          },
+        ],
+        {
+          duration: postureDuration,
+          easing: "cubic-bezier(.45, 0, .55, 1)",
+          fill: "forwards",
+        },
+      );
+      elbowAnimation = thinkingElbow.animate(
+        [
+          {
+            transform: isThinking
+              ? "translate(-10px, -33px)"
+              : "translate(0, 0)",
+          },
+          {
+            transform: isThinking
+              ? "translate(0, 0)"
+              : "translate(-10px, -33px)",
+          },
+        ],
+        {
+          duration: postureDuration,
+          easing: "cubic-bezier(.45, 0, .55, 1)",
+          fill: "forwards",
+        },
+      );
+
+      if (armMorphAnimation) {
+        const originalValues =
+          armMorphAnimation.dataset.originalValues ??
+          armMorphAnimation.getAttribute("values") ??
+          "";
+        armMorphAnimation.dataset.originalValues = originalValues;
+        const paths = originalValues.split(";");
+        const neutralPath = paths[0];
+        const thinkingPath = paths[2];
+        if (neutralPath && thinkingPath) {
+          armMorphAnimation.setAttribute(
+            "values",
+            isThinking
+              ? `${neutralPath};${thinkingPath}`
+              : `${thinkingPath};${neutralPath}`,
+          );
+          armMorphAnimation.setAttribute("keyTimes", "0;1");
+          armMorphAnimation.setAttribute("keySplines", ".45 0 .55 1");
+          armMorphAnimation.setAttribute("calcMode", "spline");
+          armMorphAnimation.setAttribute("dur", `${postureDuration}ms`);
+          armMorphAnimation.beginElement();
+        }
+      }
+    };
+
+    const handleThinkingChange = (event: Event) => {
+      setThinkingPosture((event as CustomEvent<boolean>).detail);
+    };
+    window.addEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
+
     const swayAnimations = Array.from(headParts, (part) =>
       part.animate(
         [
@@ -268,10 +389,13 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       cancelled = true;
       breath.getAnimations().forEach((animation) => animation.cancel());
       swayAnimations.forEach((animation) => animation.cancel());
+      armAnimation?.cancel();
+      elbowAnimation?.cancel();
       cancelAnimationFrame(gazeFrame);
       window.removeEventListener("pointermove", updateGazeTarget);
       window.removeEventListener("pointerleave", resetGaze);
       window.removeEventListener("blur", resetGaze);
+      window.removeEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
     };
   }, [markup]);
 
