@@ -6,10 +6,15 @@ import { ArrowUp, LoaderCircle, Sparkles, X } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import {
+  CornerIconButton,
+  type CornerIconButtonPlacement,
+} from "@/components/ui/corner-icon-button";
 import { setAvatarThinking } from "@/lib/avatar-state";
+
+const cornerControlPlacement: CornerIconButtonPlacement = "cascaded";
 
 function getLocalAnswer(question: string) {
   const normalizedQuestion = question.toLowerCase();
@@ -49,27 +54,32 @@ export function PortfolioCommandMenu() {
     <div className="fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2">
       {answer ? (
         <div
-          className="animate-answer-in border-border text-foreground relative isolate mb-2 overflow-hidden rounded-2xl border bg-transparent py-3 pr-12 pl-4 text-sm leading-6 shadow-lg"
+          className="animate-answer-in relative isolate mb-2"
           role="status"
         >
-          <span
-            aria-hidden="true"
-            className="bg-background/45 pointer-events-none absolute inset-0 -z-10 rounded-[inherit] backdrop-blur-[500px] backdrop-saturate-[160%]"
-          />
-          <button
+          <div className="border-border text-foreground relative isolate overflow-hidden rounded-2xl border bg-transparent py-3 pr-12 pl-4 text-sm leading-6 shadow-lg">
+            <span
+              aria-hidden="true"
+              className="bg-background/45 pointer-events-none absolute inset-0 -z-10 rounded-[inherit] backdrop-blur-[500px] backdrop-saturate-[160%]"
+            />
+            {answer}
+          </div>
+          <CornerIconButton
+          
             type="button"
             onClick={() => setAnswer("")}
             aria-label="Dismiss answer"
-            className="hover:bg-foreground/10 focus-visible:ring-ring absolute top-2 right-2 flex size-8 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            // "inset" for corner placement to place the button in the corner of the answer box, "cascaded" for a more visually appealing placement
+            placement={cornerControlPlacement}
           >
             <X className="size-4" aria-hidden="true" />
-          </button>
-          {answer}
+          </CornerIconButton>
         </div>
       ) : null}
 
       <form
         onSubmit={handleSubmit}
+        className="relative"
         style={{
           WebkitBackdropFilter: "blur(15px)",
           backdropFilter: "blur(15px)",
@@ -77,7 +87,7 @@ export function PortfolioCommandMenu() {
         }}
       >
         <InputGroup
-          className="relative isolate h-14 overflow-hidden rounded-full border bg-transparent px-2 shadow-lg dark:bg-transparent"
+          className="relative isolate h-14 overflow-visible rounded-full border bg-transparent px-2 shadow-lg dark:bg-transparent"
         >
           <span
             aria-hidden="true"
@@ -91,13 +101,18 @@ export function PortfolioCommandMenu() {
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="Ask about my work and experience..."
             aria-label="Ask about Giovan's experience"
-            className="h-full light:placeholder:text-olive-800 placeholder:opacity-100"
+            className="h-full pr-12 light:placeholder:text-olive-800 placeholder:opacity-100"
             // style={{backgroundColor: "white", color: "inherit"}}
           />
-          <InputGroupAddon align="inline-end">
-            <InputGroupButton type="submit" size="icon-sm" disabled={!question.trim() || isLoading} aria-label="Ask question" className="rounded-full">
+          <InputGroupAddon align="inline-end" className="contents">
+            <CornerIconButton
+              type="submit"
+              disabled={!question.trim() || isLoading}
+              aria-label="Ask question"
+              placement={cornerControlPlacement}
+            >
               {isLoading ? <LoaderCircle className="animate-spin" /> : <ArrowUp />}
-            </InputGroupButton>
+            </CornerIconButton>
           </InputGroupAddon>
         </InputGroup>
       </form>
