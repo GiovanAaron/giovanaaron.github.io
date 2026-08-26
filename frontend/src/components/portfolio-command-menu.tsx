@@ -62,9 +62,16 @@ export function PortfolioCommandMenu() {
   }
 
   return (
-    <div className="fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2">
+    <div className="fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2
+    "
+    >
       {answer ? (
-        <div
+        <div  style={{
+              WebkitBackdropFilter: "blur(15px) saturate(180%)",
+              backdropFilter: "blur(15px) saturate(180%)",
+              backgroundColor: "color-mix(in oklch, var(--background) 50%, transparent)",
+              borderRadius: "var(--radius-2xl)",
+            }}
           className={`${isClosingAnswer ? "animate-answer-out" : "animate-answer-in"} relative isolate mb-2`}
           role="status"
           onAnimationEnd={() => {
@@ -72,13 +79,17 @@ export function PortfolioCommandMenu() {
               setAnswer("");
               setIsClosingAnswer(false);
             }
-          }}
+          }
+        }
         >
-          <div className="border-border text-foreground relative isolate overflow-hidden rounded-2xl border bg-transparent py-3 pr-12 pl-4 text-sm leading-6 shadow-lg backdrop-blur-[80px] backdrop-saturate-[180%]">
-            <span
-              aria-hidden="true"
-              className="bg-background/55 pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
-            />
+          <div
+            className="border-border text-foreground relative overflow-hidden rounded-2xl border py-3 pr-12 pl-4 text-sm leading-6 shadow-lg"
+            // style={{
+            //   WebkitBackdropFilter: "blur(15px) saturate(180%)",
+            //   backdropFilter: "blur(15px) saturate(180%)",
+            //   backgroundColor: "color-mix(in oklch, var(--background) 70%, transparent)",
+            // }}
+          >
             {answer}
           </div>
           <CornerIconButton
