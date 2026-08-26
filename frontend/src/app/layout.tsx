@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "John Smith — Creative UI/UX Designer",
-  description: "Portfolio of John Smith, a creative UI/UX designer.",
+  title: "Giovan Aaron - Portfolio",
+  description: "Portfolio of Giovan Aaron, full-stack software developer.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
