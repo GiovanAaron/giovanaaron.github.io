@@ -11,7 +11,7 @@ import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const navItems = ["Home", "Products", "About Us", "Contacts"];
+const navItems = ["Home", "Products", "About Me", "Contacts"];
 
 function MetricCard({
   className = "",
