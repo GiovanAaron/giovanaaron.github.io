@@ -129,7 +129,7 @@ export function PortfolioCommandMenu() {
               type="submit"
               disabled={!question.trim() || isLoading}
               aria-label="Ask question"
-              placement={cornerControlPlacement}
+              placement={"inset"}
             >
               {isLoading ? <LoaderCircle className="animate-spin" /> : <ArrowUp />}
             </CornerIconButton>
