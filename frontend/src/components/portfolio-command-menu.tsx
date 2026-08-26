@@ -49,7 +49,7 @@ export function PortfolioCommandMenu() {
     <div className="fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2">
       {answer ? (
         <div
-          className="border-border text-foreground relative isolate mb-2 overflow-hidden rounded-2xl border bg-transparent px-4 py-3 text-sm leading-6 shadow-lg"
+          className="animate-answer-in border-border text-foreground relative isolate mb-2 overflow-hidden rounded-2xl border bg-transparent px-4 py-3 text-sm leading-6 shadow-lg"
           role="status"
         >
           <span

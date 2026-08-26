@@ -175,3 +175,34 @@
     @apply min-w-[300px] font-sans;
   }
 }
+
+@keyframes answer-in {
+  0% {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.94);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-0.35rem) scale(1.02);
+  }
+  75% {
+    transform: translateY(0.15rem) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@layer utilities {
+  .animate-answer-in {
+    animation: answer-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    transform-origin: bottom center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-answer-in {
+      animation: none;
+    }
+  }
+}

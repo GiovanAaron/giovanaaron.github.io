@@ -7,7 +7,7 @@ import { useState } from "react";
 import { AnimatedAvatar } from "@/components/animated-avatar";
 
 export function PortfolioHeroImage() {
-  const [isFlipped, setIsFlipped] = useState(true);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   return (
     <>
