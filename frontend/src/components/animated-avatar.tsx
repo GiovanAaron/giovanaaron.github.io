@@ -7,7 +7,15 @@ import { AVATAR_THINKING_EVENT } from "@/lib/avatar-state";
 const AVATAR_SOURCE = "/assets/new-me-red.svg";
 const EXPRESSION_SOURCE = "/assets/me-red-animated.svg";
 const THINKING_SOURCE = "/assets/me-red-animated-thinking.svg";
+const THINKING_EXPRESSION_SOURCE = "/assets/me-red-thinking-expression.svg";
 const BREATHS_BEFORE_SMILE = { min: 2, max: 6 };
+const THINKING_EXPRESSION_PATHS = [
+  "neutral-glasses-fill",
+  "neutral-left-pupil",
+  "neutral-moustach-mouth",
+  "neutral-right-eye-lid",
+  "neutral-right-pupil",
+];
 
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -21,6 +29,7 @@ function prepareInlineSvg(
   source: string,
   expressionSource: string,
   thinkingSource: string,
+  thinkingExpressionSource: string,
 ) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
   const expressionDocument = new DOMParser().parseFromString(
@@ -29,6 +38,10 @@ function prepareInlineSvg(
   );
   const thinkingDocument = new DOMParser().parseFromString(
     thinkingSource,
+    "image/svg+xml",
+  );
+  const thinkingExpressionDocument = new DOMParser().parseFromString(
+    thinkingExpressionSource,
     "image/svg+xml",
   );
   const svg = document.documentElement;
@@ -66,6 +79,34 @@ function prepareInlineSvg(
     expressionDocument,
     "#animated-avatar-neutral animate[attributeName='d']",
   );
+
+  THINKING_EXPRESSION_PATHS.forEach((id) => {
+    const targetPath = svg.querySelector(`#${id}`);
+    const expressionPath = thinkingExpressionDocument.querySelector(`#${id}`);
+    let neutralPath = targetPath?.getAttribute("d");
+    const thinkingPath = expressionPath?.getAttribute("d");
+    if (!targetPath || !neutralPath || !thinkingPath || neutralPath === thinkingPath) {
+      return;
+    }
+
+    // The edited eyelid replaces two horizontal commands with equivalent
+    // line commands. Normalize the neutral path so SMIL can interpolate it.
+    if (id === "neutral-right-eye-lid") {
+      neutralPath = neutralPath
+        .replace("H212.271", "L212.271 261.965")
+        .replace("H261.871", "L261.871 255.565");
+      targetPath.setAttribute("d", neutralPath);
+    }
+
+    const animation = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "animate",
+    );
+    animation.setAttribute("attributeName", "d");
+    animation.setAttribute("values", `${neutralPath};${thinkingPath}`);
+    animation.setAttribute("data-avatar-animation", "thinking-expression");
+    targetPath.appendChild(animation);
+  });
   importPathAnimations(
     thinkingDocument,
     "#neutral-upper-arm-outline > animate[attributeName='d']",
@@ -95,6 +136,25 @@ function prepareInlineSvg(
     breath.appendChild(neutral);
   }
 
+  const headNodes = [
+    "neutral-head",
+    "neutral-expression-suspicious-d362b6de",
+    "neutral-Face",
+    "neutral-glasses",
+  ]
+    .map((id) => svg.querySelector(`#${id}`))
+    .filter((node): node is Element => Boolean(node));
+  const firstHeadNode = headNodes[0];
+  if (firstHeadNode?.parentNode && headNodes.length === 4) {
+    const sway = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const tilt = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    sway.id = "animated-avatar-head-sway";
+    tilt.id = "animated-avatar-head-tilt";
+    firstHeadNode.parentNode.insertBefore(sway, firstHeadNode);
+    sway.appendChild(tilt);
+    headNodes.forEach((node) => tilt.appendChild(node));
+  }
+
   return new XMLSerializer().serializeToString(svg);
 }
 
@@ -106,14 +166,24 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const controller = new AbortController();
 
     Promise.all(
-      [AVATAR_SOURCE, EXPRESSION_SOURCE, THINKING_SOURCE].map(async (source) => {
+      [
+        AVATAR_SOURCE,
+        EXPRESSION_SOURCE,
+        THINKING_SOURCE,
+        THINKING_EXPRESSION_SOURCE,
+      ].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) throw new Error("Could not load the animated avatar");
         return response.text();
       }),
     )
-      .then(([avatar, expressions, thinking]) =>
-        prepareInlineSvg(avatar, expressions, thinking),
+      .then(([avatar, expressions, thinking, thinkingExpression]) =>
+        prepareInlineSvg(
+          avatar,
+          expressions,
+          thinking,
+          thinkingExpression,
+        ),
       )
       .then(setMarkup)
       .catch((error: unknown) => {
@@ -138,17 +208,23 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const armMorphAnimation = host.querySelector<SVGAnimateElement>(
       "#neutral-upper-arm-outline > animate[attributeName='d']",
     );
+    const thinkingExpressionAnimations = host.querySelectorAll<SVGAnimateElement>(
+      "animate[data-avatar-animation='thinking-expression']",
+    );
     const thinkingArm = host.querySelector<SVGGElement>(
       "#neutral-right-hand-and-forearm",
     );
     const thinkingElbow = host.querySelector<SVGGElement>(
       "#neutral-elbow-anchor",
     );
+    const thinkingHead = host.querySelector<SVGGElement>(
+      "#animated-avatar-head-tilt",
+    );
     const eyeGroups = host.querySelectorAll<SVGGElement>(
       "#neutral-left-eye, #neutral-right-eye, #smile-left-eye, #smile-right-eye",
     );
     const headParts = host.querySelectorAll<SVGGElement>(
-      "#neutral-head, #neutral-expression-suspicious-d362b6de, #neutral-Face, #neutral-glasses, #smile-head, #smile-expression-suspicious-d362b6de, #smile-Face, #smile-glasses",
+      "#animated-avatar-head-sway",
     );
 
     if (!breath || !neutral) return;
@@ -161,6 +237,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
     let cancelled = false;
     let smiling = false;
+    let isThinking = false;
     let breathsUntilSmile = randomWholeNumber(
       BREATHS_BEFORE_SMILE.min,
       BREATHS_BEFORE_SMILE.max,
@@ -239,6 +316,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
     let armAnimation: Animation | null = null;
     let elbowAnimation: Animation | null = null;
+    let headTiltAnimation: Animation | null = null;
 
     if (thinkingElbow) {
       thinkingElbow.style.transformBox = "view-box";
@@ -247,12 +325,57 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     }
 
     const setThinkingPosture = (isThinking: boolean) => {
-      if (!thinkingArm || !thinkingElbow || reducedMotion.matches) return;
+      if (
+        !thinkingArm ||
+        !thinkingElbow ||
+        !thinkingHead ||
+        reducedMotion.matches
+      ) {
+        return;
+      }
 
       const postureDuration = isThinking ? 1_067 : 1_600;
 
+      // If submission lands during a smile, smoothly release the eyebrow while
+      // the thinking-specific mouth morph takes precedence below.
+      if (isThinking && smiling) morphExpression(false);
+
+      thinkingExpressionAnimations.forEach((animation) => {
+        const originalValues =
+          animation.dataset.originalValues ??
+          animation.getAttribute("values") ??
+          "";
+        animation.dataset.originalValues = originalValues;
+        const [neutralPath, thinkingPath] = originalValues.split(";");
+        if (!neutralPath || !thinkingPath) return;
+
+        let startPath = isThinking ? neutralPath : thinkingPath;
+        if (
+          isThinking &&
+          smiling &&
+          animation.parentElement?.id === "neutral-moustach-mouth"
+        ) {
+          const smileAnimation = animation.parentElement.querySelector<SVGAnimateElement>(
+            "animate:not([data-avatar-animation])",
+          );
+          startPath =
+            smileAnimation?.dataset.originalValues?.split(";")[2] ?? startPath;
+        }
+
+        animation.setAttribute(
+          "values",
+          `${startPath};${isThinking ? thinkingPath : neutralPath}`,
+        );
+        animation.setAttribute("keyTimes", "0;1");
+        animation.setAttribute("keySplines", ".45 0 .55 1");
+        animation.setAttribute("calcMode", "spline");
+        animation.setAttribute("dur", `${postureDuration}ms`);
+        animation.beginElement();
+      });
+
       armAnimation?.cancel();
       elbowAnimation?.cancel();
+      headTiltAnimation?.cancel();
       thinkingArm.style.transformBox = "view-box";
       thinkingArm.style.transformOrigin = "486.739px 652.787px";
       armAnimation = thinkingArm.animate(
@@ -293,6 +416,23 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           fill: "forwards",
         },
       );
+      thinkingHead.style.transformBox = "view-box";
+      thinkingHead.style.transformOrigin = "201.224px 270.292px";
+      headTiltAnimation = thinkingHead.animate(
+        [
+          {
+            transform: isThinking ? "rotate(0deg)" : "rotate(10.983deg)",
+          },
+          {
+            transform: isThinking ? "rotate(10.983deg)" : "rotate(0deg)",
+          },
+        ],
+        {
+          duration: postureDuration,
+          easing: "cubic-bezier(.45, 0, .55, 1)",
+          fill: "forwards",
+        },
+      );
 
       if (armMorphAnimation) {
         const originalValues =
@@ -320,7 +460,15 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     };
 
     const handleThinkingChange = (event: Event) => {
-      setThinkingPosture((event as CustomEvent<boolean>).detail);
+      isThinking = (event as CustomEvent<boolean>).detail;
+      setThinkingPosture(isThinking);
+      if (isThinking) {
+        smiling = false;
+        breathsUntilSmile = randomWholeNumber(
+          BREATHS_BEFORE_SMILE.min,
+          BREATHS_BEFORE_SMILE.max,
+        );
+      }
     };
     window.addEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
 
@@ -365,6 +513,8 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         }
         if (cancelled) break;
 
+        if (isThinking) continue;
+
         // Expressions only change here, after exhale and rest have completed.
         if (smiling) {
           smiling = false;
@@ -391,6 +541,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       swayAnimations.forEach((animation) => animation.cancel());
       armAnimation?.cancel();
       elbowAnimation?.cancel();
+      headTiltAnimation?.cancel();
       cancelAnimationFrame(gazeFrame);
       window.removeEventListener("pointermove", updateGazeTarget);
       window.removeEventListener("pointerleave", resetGaze);
