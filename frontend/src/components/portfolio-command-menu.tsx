@@ -117,9 +117,11 @@ export function PortfolioCommandMenu() {
           <InputGroupInput
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
+            name="portfolio-question"
+            autoComplete="on"
             placeholder="Ask about my work and experience..."
             aria-label="Ask about Giovan's experience"
-            className="h-full pr-12 light:placeholder:text-olive-800 placeholder:opacity-100"
+            className="portfolio-question-input h-full pr-12 light:placeholder:text-olive-800 placeholder:opacity-100"
             // style={{backgroundColor: "white", color: "inherit"}}
           />
           <InputGroupAddon align="inline-end" className="contents">

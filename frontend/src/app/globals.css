@@ -210,6 +210,22 @@
 }
 
 @layer utilities {
+  .portfolio-question-input:autofill {
+    background-color: transparent;
+    color: var(--foreground);
+  }
+
+  .portfolio-question-input:-webkit-autofill,
+  .portfolio-question-input:-webkit-autofill:hover,
+  .portfolio-question-input:-webkit-autofill:focus,
+  .portfolio-question-input:-webkit-autofill:active {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: var(--foreground);
+    caret-color: var(--foreground);
+    transition: background-color 9999s ease-out 0s;
+  }
+
   .animate-answer-in {
     animation: answer-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
     transform-origin: bottom center;
