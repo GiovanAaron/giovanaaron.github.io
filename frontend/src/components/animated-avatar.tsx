@@ -14,6 +14,7 @@ const THINKING_EXPRESSION_SOURCE = "/assets/me-red-thinking-expression.svg";
 const CLOSED_EYES_SOURCE = "/assets/me-red-thinking-eyes-closed.svg";
 const ALTERNATE_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-2.svg";
 const SLEEPING_SOURCE = "/assets/me-red-sleeping.svg";
+const HUFF_SOURCE = "/assets/me-red-huff.svg";
 const BREATHS_BEFORE_SMILE = { min: 2, max: 4 };
 const THINKING_EXPRESSION_PATHS = [
   "neutral-glasses-fill",
@@ -23,6 +24,11 @@ const THINKING_EXPRESSION_PATHS = [
   "neutral-right-pupil",
 ];
 const BLINK_PATHS = ["neutral-left-pupil", "neutral-right-pupil"];
+const HUFF_PATHS = [
+  "neutral-eyebrow",
+  "neutral-left-pupil",
+  "neutral-right-pupil",
+];
 
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -73,6 +79,7 @@ function prepareInlineSvg(
   closedEyesSource: string,
   alternateNeutralSource: string,
   sleepingSource: string,
+  huffSource: string,
 ) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
   const expressionDocument = new DOMParser().parseFromString(
@@ -97,6 +104,10 @@ function prepareInlineSvg(
   );
   const sleepingDocument = new DOMParser().parseFromString(
     sleepingSource,
+    "image/svg+xml",
+  );
+  const huffDocument = new DOMParser().parseFromString(
+    huffSource,
     "image/svg+xml",
   );
   const svg = document.documentElement;
@@ -226,6 +237,31 @@ function prepareInlineSvg(
     animation.setAttribute("data-avatar-animation", "sleeping-mouth");
     neutralMouth.appendChild(animation);
   }
+
+  HUFF_PATHS.forEach((id) => {
+    const targetPath = svg.querySelector(`#${id}`);
+    const huffPath = huffDocument.querySelector(`#${id}`);
+    let neutralPath = targetPath?.getAttribute("d");
+    const huffPathData = huffPath?.getAttribute("d");
+    if (!targetPath || !neutralPath || !huffPathData) return;
+
+    if (id === "neutral-eyebrow") {
+      neutralPath = neutralPath.replace(
+        "H169.899",
+        "L169.899 260.974",
+      );
+      targetPath.setAttribute("d", neutralPath);
+    }
+
+    const animation = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "animate",
+    );
+    animation.setAttribute("attributeName", "d");
+    animation.setAttribute("values", `${neutralPath};${huffPathData}`);
+    animation.setAttribute("data-avatar-animation", "huff-expression");
+    targetPath.appendChild(animation);
+  });
   importPathAnimations(
     thinkingDocument,
     "#neutral-upper-arm-outline > animate[attributeName='d']",
@@ -304,6 +340,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         CLOSED_EYES_SOURCE,
         ALTERNATE_NEUTRAL_SOURCE,
         SLEEPING_SOURCE,
+        HUFF_SOURCE,
       ].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) throw new Error("Could not load the animated avatar");
@@ -319,6 +356,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           closedEyes,
           alternateNeutral,
           sleeping,
+          huff,
         ]) =>
           prepareInlineSvg(
             avatar,
@@ -328,6 +366,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             closedEyes,
             alternateNeutral,
             sleeping,
+            huff,
           ),
       )
       .then(setMarkup)
@@ -364,6 +403,9 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     );
     const sleepingMouthAnimation = host.querySelector<SVGAnimateElement>(
       "animate[data-avatar-animation='sleeping-mouth']",
+    );
+    const huffAnimations = host.querySelectorAll<SVGAnimateElement>(
+      "animate[data-avatar-animation='huff-expression']",
     );
     const thinkingArm = host.querySelector<SVGGElement>(
       "#neutral-right-hand-and-forearm",
@@ -945,50 +987,121 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
         sleepTimer = window.setTimeout(() => {
           snoreAnimation.cancel();
-          sleepAnimations.push(
-            thinkingHead.animate(
-              [
-                { transform: "rotate(-19.237deg)" },
-                { transform: "rotate(0deg)" },
-              ],
-              {
-                duration: 650,
-                easing: "cubic-bezier(.45, 0, .25, 1)",
-                fill: "forwards",
-              },
-            ),
-          );
+
+          // A rapid wake-up flutter happens while the sleeping pose is held.
           blinkAnimations.forEach((animation) => {
             const [openPath, closedPath] =
               animation.dataset.originalValues?.split(";") ?? [];
             if (!openPath || !closedPath) return;
-            animation.setAttribute("values", `${closedPath};${openPath}`);
-            animation.setAttribute("dur", "650ms");
+            animation.setAttribute(
+              "values",
+              `${closedPath};${openPath};${closedPath};${openPath};${closedPath};${openPath};${closedPath};${closedPath}`,
+            );
+            animation.setAttribute("keyTimes", "0;.13;.26;.39;.52;.65;.78;1");
+            animation.setAttribute(
+              "keySplines",
+              ".35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1",
+            );
+            animation.setAttribute("dur", "900ms");
             animation.beginElement();
           });
-          if (sleepingMouthAnimation) {
-            const [neutralMouthPath, sleepingMouthPath] =
-              sleepingMouthAnimation.dataset.originalValues?.split(";") ?? [];
-            if (neutralMouthPath && sleepingMouthPath) {
-              sleepingMouthAnimation.setAttribute(
-                "values",
-                `${sleepingMouthPath};${neutralMouthPath}`,
-              );
-              sleepingMouthAnimation.setAttribute("dur", "650ms");
-              sleepingMouthAnimation.beginElement();
-            }
-          }
 
           sleepTimer = window.setTimeout(() => {
-            sleepAnimations.forEach((animation) => animation.cancel());
-            sleepAnimations = [];
-            blinkAnimations.forEach((animation) =>
-              animation.setAttribute("fill", "remove"),
+            sleepAnimations.push(
+              thinkingHead.animate(
+                [
+                  { transform: "rotate(-19.237deg)" },
+                  { transform: "rotate(0deg)" },
+                ],
+                {
+                  duration: 650,
+                  easing: "cubic-bezier(.45, 0, .25, 1)",
+                  fill: "forwards",
+                },
+              ),
             );
-            sleepingActive = false;
-            scheduleRestingEyelid();
-            blinkTimer = window.setTimeout(blink, randomBetween(4_000, 7_000));
-          }, 650);
+            huffAnimations.forEach((animation) => {
+              const originalValues =
+                animation.dataset.originalValues ??
+                animation.getAttribute("values") ??
+                "";
+              animation.dataset.originalValues = originalValues;
+              const [neutralPath, huffPath] = originalValues.split(";");
+              if (!neutralPath || !huffPath) return;
+
+              let startingPath = neutralPath;
+              if (animation.parentElement?.id.includes("pupil")) {
+                const blinkAnimation = Array.from(blinkAnimations).find(
+                  (blink) => blink.parentElement?.id === animation.parentElement?.id,
+                );
+                startingPath =
+                  blinkAnimation?.dataset.originalValues?.split(";")[1] ??
+                  startingPath;
+              }
+              animation.setAttribute("values", `${startingPath};${huffPath}`);
+              animation.setAttribute("keyTimes", "0;1");
+              animation.setAttribute("keySplines", ".45 0 .55 1");
+              animation.setAttribute("dur", "650ms");
+              animation.beginElement();
+            });
+            if (sleepingMouthAnimation) {
+              const [neutralMouthPath, sleepingMouthPath] =
+                sleepingMouthAnimation.dataset.originalValues?.split(";") ?? [];
+              if (neutralMouthPath && sleepingMouthPath) {
+                sleepingMouthAnimation.setAttribute(
+                  "values",
+                  `${sleepingMouthPath};${neutralMouthPath}`,
+                );
+                sleepingMouthAnimation.setAttribute("dur", "650ms");
+                sleepingMouthAnimation.beginElement();
+              }
+            }
+
+            sleepTimer = window.setTimeout(() => {
+              const huffVibration = sleepMotion.animate(
+                [
+                  { transform: "translate(0, 0) rotate(0deg)" },
+                  { transform: "translate(-4.2px, 0.9px) rotate(-0.54deg)" },
+                  { transform: "translate(4.5px, -0.9px) rotate(0.6deg)" },
+                  { transform: "translate(-3.3px, 0.6px) rotate(-0.42deg)" },
+                  { transform: "translate(3.75px, -0.54px) rotate(0.48deg)" },
+                  { transform: "translate(0, 0) rotate(0deg)" },
+                ],
+                {
+                  duration: 100,
+                  iterations: 5,
+                  easing: "linear",
+                },
+              );
+              sleepAnimations.push(huffVibration);
+
+              sleepTimer = window.setTimeout(() => {
+                huffVibration.cancel();
+                huffAnimations.forEach((animation) => {
+                  const [neutralPath, huffPath] =
+                    animation.dataset.originalValues?.split(";") ?? [];
+                  if (!neutralPath || !huffPath) return;
+                  animation.setAttribute("values", `${huffPath};${neutralPath}`);
+                  animation.setAttribute("dur", "500ms");
+                  animation.beginElement();
+                });
+
+                sleepTimer = window.setTimeout(() => {
+                  sleepAnimations.forEach((animation) => animation.cancel());
+                  sleepAnimations = [];
+                  blinkAnimations.forEach((animation) =>
+                    animation.setAttribute("fill", "remove"),
+                  );
+                  sleepingActive = false;
+                  scheduleRestingEyelid();
+                  blinkTimer = window.setTimeout(
+                    blink,
+                    randomBetween(4_000, 7_000),
+                  );
+                }, 500);
+              }, 500);
+            }, 650);
+          }, 900);
         }, 3_000);
       }, 650);
     };
