@@ -35,6 +35,16 @@ export function PortfolioCommandMenu() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isClosingAnswer, setIsClosingAnswer] = useState(false);
+
+  function dismissAnswer() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setAnswer("");
+      return;
+    }
+
+    setIsClosingAnswer(true);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,6 +52,7 @@ export function PortfolioCommandMenu() {
     if (!submittedQuestion || isLoading) return;
 
     setIsLoading(true);
+    setIsClosingAnswer(false);
     setAnswer("");
     setAvatarThinking(true);
     await new Promise((resolve) => window.setTimeout(resolve, 7000));
@@ -54,8 +65,14 @@ export function PortfolioCommandMenu() {
     <div className="fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2">
       {answer ? (
         <div
-          className="animate-answer-in relative isolate mb-2"
+          className={`${isClosingAnswer ? "animate-answer-out" : "animate-answer-in"} relative isolate mb-2`}
           role="status"
+          onAnimationEnd={() => {
+            if (isClosingAnswer) {
+              setAnswer("");
+              setIsClosingAnswer(false);
+            }
+          }}
         >
           <div className="border-border text-foreground relative isolate overflow-hidden rounded-2xl border bg-transparent py-3 pr-12 pl-4 text-sm leading-6 shadow-lg">
             <span
@@ -67,10 +84,11 @@ export function PortfolioCommandMenu() {
           <CornerIconButton
           
             type="button"
-            onClick={() => setAnswer("")}
+            onClick={dismissAnswer}
             aria-label="Dismiss answer"
             // "inset" for corner placement to place the button in the corner of the answer box, "cascaded" for a more visually appealing placement
             placement={cornerControlPlacement}
+            disabled={isClosingAnswer}
           >
             <X className="size-4" aria-hidden="true" />
           </CornerIconButton>
