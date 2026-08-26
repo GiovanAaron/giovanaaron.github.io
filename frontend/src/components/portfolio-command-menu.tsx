@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { ArrowUp, LoaderCircle, Sparkles } from "lucide-react";
+import { ArrowUp, LoaderCircle, Sparkles, X } from "lucide-react";
 
 import {
   InputGroup,
@@ -49,13 +49,21 @@ export function PortfolioCommandMenu() {
     <div className="fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2">
       {answer ? (
         <div
-          className="animate-answer-in border-border text-foreground relative isolate mb-2 overflow-hidden rounded-2xl border bg-transparent px-4 py-3 text-sm leading-6 shadow-lg"
+          className="animate-answer-in border-border text-foreground relative isolate mb-2 overflow-hidden rounded-2xl border bg-transparent py-3 pr-12 pl-4 text-sm leading-6 shadow-lg"
           role="status"
         >
           <span
             aria-hidden="true"
             className="bg-background/45 pointer-events-none absolute inset-0 -z-10 rounded-[inherit] backdrop-blur-[500px] backdrop-saturate-[160%]"
           />
+          <button
+            type="button"
+            onClick={() => setAnswer("")}
+            aria-label="Dismiss answer"
+            className="hover:bg-foreground/10 focus-visible:ring-ring absolute top-2 right-2 flex size-8 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
           {answer}
         </div>
       ) : null}
