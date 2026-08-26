@@ -2,12 +2,18 @@
 
 import Image from "next/image";
 import { Rotate3D } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AnimatedAvatar } from "@/components/animated-avatar";
 
 export function PortfolioHeroImage() {
   const [isFlipped, setIsFlipped] = useState(false);
+
+  useEffect(() => {
+    const flipTimer = window.setTimeout(() => setIsFlipped(true), 2500);
+
+    return () => window.clearTimeout(flipTimer);
+  }, []);
 
   return (
     <>

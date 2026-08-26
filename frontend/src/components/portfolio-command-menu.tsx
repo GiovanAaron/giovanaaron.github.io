@@ -74,10 +74,10 @@ export function PortfolioCommandMenu() {
             }
           }}
         >
-          <div className="border-border text-foreground relative isolate overflow-hidden rounded-2xl border bg-transparent py-3 pr-12 pl-4 text-sm leading-6 shadow-lg">
+          <div className="border-border text-foreground relative isolate overflow-hidden rounded-2xl border bg-transparent py-3 pr-12 pl-4 text-sm leading-6 shadow-lg backdrop-blur-[80px] backdrop-saturate-[180%]">
             <span
               aria-hidden="true"
-              className="bg-background/45 pointer-events-none absolute inset-0 -z-10 rounded-[inherit] backdrop-blur-[500px] backdrop-saturate-[160%]"
+              className="bg-background/55 pointer-events-none absolute inset-0 -z-10 rounded-[inherit]"
             />
             {answer}
           </div>
