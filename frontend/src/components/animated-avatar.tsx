@@ -1124,7 +1124,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         smiling = false;
       }
 
-      tiredAnimations.forEach((animation) => {
+      eyeRollAnimations.forEach((animation) => {
         const originalValues =
           animation.dataset.originalValues ??
           animation.getAttribute("values") ??
@@ -1157,13 +1157,13 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
       sleepTimer = window.setTimeout(() => {
         headTiltAnimation?.cancel();
-        tiredAnimations.forEach((animation) => {
+        eyeRollAnimations.forEach((animation) => {
           const id = animation.parentElement?.id;
           if (id?.includes("pupil") || id === "neutral-moustach-mouth") return;
-          const [neutralPath, tiredPath] =
+          const [neutralPath, eyeRollPath] =
             animation.dataset.originalValues?.split(";") ?? [];
-          if (!neutralPath || !tiredPath) return;
-          animation.setAttribute("values", `${tiredPath};${neutralPath}`);
+          if (!neutralPath || !eyeRollPath) return;
+          animation.setAttribute("values", `${eyeRollPath};${neutralPath}`);
           animation.setAttribute("keyTimes", "0;1");
           animation.setAttribute("keySplines", ".25 .1 .25 1");
           animation.setAttribute("dur", "650ms");
@@ -1196,17 +1196,18 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         animation.dataset.originalValues = originalValues;
         const [openPath, closedPath] = originalValues.split(";");
         if (!openPath || !closedPath) return;
-        const tiredPupil = Array.from(tiredAnimations).find(
-          (tiredAnimation) =>
-            tiredAnimation.parentElement?.id === animation.parentElement?.id,
+        const eyeRollPupil = Array.from(eyeRollAnimations).find(
+          (eyeRollAnimation) =>
+            eyeRollAnimation.parentElement?.id === animation.parentElement?.id,
         );
-        const tiredPath =
-          tiredPupil?.dataset.originalValues?.split(";")[1] ?? openPath;
-        animation.setAttribute("values", `${tiredPath};${closedPath}`);
+        const eyeRollPath =
+          eyeRollPupil?.dataset.originalValues?.split(";")[1] ?? openPath;
+        animation.setAttribute("values", `${eyeRollPath};${closedPath}`);
         animation.setAttribute("keyTimes", "0;1");
         animation.setAttribute("keySplines", ".45 0 .55 1");
         animation.setAttribute("calcMode", "spline");
         animation.setAttribute("dur", "650ms");
+        animation.setAttribute("restart", "always");
         animation.setAttribute("fill", "freeze");
         animation.beginElement();
       });
@@ -1220,12 +1221,12 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         sleepingMouthAnimation.setAttribute("fill", "freeze");
         const [neutralMouthPath, sleepingMouthPath] = originalValues.split(";");
         if (neutralMouthPath && sleepingMouthPath) {
-          const tiredMouth = Array.from(tiredAnimations).find(
+          const eyeRollMouth = Array.from(eyeRollAnimations).find(
             (animation) =>
               animation.parentElement?.id === "neutral-moustach-mouth",
           );
           const startingMouthPath =
-            tiredMouth?.dataset.originalValues?.split(";")[1] ??
+            eyeRollMouth?.dataset.originalValues?.split(";")[1] ??
             neutralMouthPath;
 
           sleepingMouthAnimation.setAttribute(
@@ -1272,12 +1273,15 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             if (!openPath || !closedPath) return;
             animation.setAttribute(
               "values",
-              `${closedPath};${openPath};${closedPath};${openPath};${closedPath};${openPath};${closedPath};${closedPath}`,
+              `${closedPath};${openPath};${closedPath};${openPath};${closedPath};${openPath};${closedPath};${openPath};${closedPath};${closedPath}`,
             );
-            animation.setAttribute("keyTimes", "0;.13;.26;.39;.52;.65;.78;1");
+            animation.setAttribute(
+              "keyTimes",
+              "0;.1;.2;.3;.4;.5;.6;.7;.8;1",
+            );
             animation.setAttribute(
               "keySplines",
-              ".35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1",
+              ".35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1;.35 0 .65 1",
             );
             animation.setAttribute("dur", "900ms");
             animation.beginElement();
@@ -1376,7 +1380,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
                   sleepAnimations.forEach((animation) => animation.cancel());
                   sleepAnimations = [];
                   blinkAnimations.forEach(resetSmilAnimation);
-                  tiredAnimations.forEach(resetSmilAnimation);
+                  eyeRollAnimations.forEach(resetSmilAnimation);
                   huffAnimations.forEach(resetSmilAnimation);
                   if (sleepingMouthAnimation) {
                     resetSmilAnimation(sleepingMouthAnimation);
