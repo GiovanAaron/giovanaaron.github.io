@@ -12,9 +12,10 @@ const EXPRESSION_SOURCE = "/assets/me-red-animated.svg";
 const THINKING_SOURCE = "/assets/me-red-animated-thinking.svg";
 const THINKING_EXPRESSION_SOURCE = "/assets/me-red-thinking-expression.svg";
 const CLOSED_EYES_SOURCE = "/assets/me-red-thinking-eyes-closed.svg";
-const ALTERNATE_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-2.svg";
+const ALTERNATE_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-warm.svg";
 const SLEEPING_SOURCE = "/assets/me-red-sleeping.svg";
 const HUFF_SOURCE = "/assets/me-red-huff.svg";
+const TIRED_SOURCE = "/assets/me-red-tired-expression.svg";
 const BREATHS_BEFORE_SMILE = { min: 2, max: 4 };
 const THINKING_EXPRESSION_PATHS = [
   "neutral-glasses-fill",
@@ -28,6 +29,14 @@ const HUFF_PATHS = [
   "neutral-eyebrow",
   "neutral-left-pupil",
   "neutral-right-pupil",
+];
+const TIRED_PATHS = [
+  "neutral-chin-crease",
+  "neutral-right-pupil",
+  "neutral-left-pupil",
+  "neutral-chingoatee",
+  "neutral-moustach-mouth",
+  "neutral-nose",
 ];
 
 function randomBetween(min: number, max: number) {
@@ -80,6 +89,7 @@ function prepareInlineSvg(
   alternateNeutralSource: string,
   sleepingSource: string,
   huffSource: string,
+  tiredSource: string,
 ) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
   const expressionDocument = new DOMParser().parseFromString(
@@ -108,6 +118,10 @@ function prepareInlineSvg(
   );
   const huffDocument = new DOMParser().parseFromString(
     huffSource,
+    "image/svg+xml",
+  );
+  const tiredDocument = new DOMParser().parseFromString(
+    tiredSource,
     "image/svg+xml",
   );
   const svg = document.documentElement;
@@ -208,11 +222,27 @@ function prepareInlineSvg(
       "values",
       `${restingEyelidPath};${alternateRestingEyelidPath}`,
     );
-    animation.setAttribute("data-avatar-animation", "resting-eyelid");
+    animation.setAttribute("data-avatar-animation", "resting-expression");
     restingEyelid.appendChild(animation);
   }
 
   const neutralMouth = svg.querySelector("#neutral-moustach-mouth");
+  const warmMouth = alternateNeutralDocument.querySelector(
+    "#neutral-moustach-mouth",
+  );
+  const warmMouthPath = warmMouth?.getAttribute("d");
+  const baseMouthPath = neutralMouth?.getAttribute("d");
+  if (neutralMouth && baseMouthPath && warmMouthPath) {
+    const animation = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "animate",
+    );
+    animation.setAttribute("attributeName", "d");
+    animation.setAttribute("values", `${baseMouthPath};${warmMouthPath}`);
+    animation.setAttribute("data-avatar-animation", "resting-expression");
+    neutralMouth.appendChild(animation);
+  }
+
   const sleepingMouth =
     sleepingDocument.querySelector("#neutral-moustach-mouth") ??
     sleepingDocument.querySelectorAll("path")[22];
@@ -260,6 +290,26 @@ function prepareInlineSvg(
     animation.setAttribute("attributeName", "d");
     animation.setAttribute("values", `${neutralPath};${huffPathData}`);
     animation.setAttribute("data-avatar-animation", "huff-expression");
+    targetPath.appendChild(animation);
+  });
+
+  TIRED_PATHS.forEach((id) => {
+    const targetPath = svg.querySelector(`#${id}`);
+    const tiredPath = tiredDocument.querySelector(`#${id}`);
+    const neutralPath = targetPath?.getAttribute("d");
+    const tiredPathData = tiredPath?.getAttribute("d");
+    if (!targetPath || !neutralPath || !tiredPathData) return;
+
+    const animation = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "animate",
+    );
+    animation.setAttribute("attributeName", "d");
+    animation.setAttribute(
+      "values",
+      `${neutralPath};${tiredPathData}`,
+    );
+    animation.setAttribute("data-avatar-animation", "tired-expression");
     targetPath.appendChild(animation);
   });
   importPathAnimations(
@@ -341,6 +391,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         ALTERNATE_NEUTRAL_SOURCE,
         SLEEPING_SOURCE,
         HUFF_SOURCE,
+        TIRED_SOURCE,
       ].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) throw new Error("Could not load the animated avatar");
@@ -357,6 +408,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           alternateNeutral,
           sleeping,
           huff,
+          tired,
         ]) =>
           prepareInlineSvg(
             avatar,
@@ -367,6 +419,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             alternateNeutral,
             sleeping,
             huff,
+            tired,
           ),
       )
       .then(setMarkup)
@@ -398,14 +451,23 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const blinkAnimations = host.querySelectorAll<SVGAnimateElement>(
       "animate[data-avatar-animation='blink']",
     );
+    const restingExpressionAnimations = host.querySelectorAll<SVGAnimateElement>(
+      "animate[data-avatar-animation='resting-expression']",
+    );
     const restingEyelidAnimation = host.querySelector<SVGAnimateElement>(
-      "animate[data-avatar-animation='resting-eyelid']",
+      "#neutral-right-eye-lid > animate[data-avatar-animation='resting-expression']",
+    );
+    const restingMouthAnimation = host.querySelector<SVGAnimateElement>(
+      "#neutral-moustach-mouth > animate[data-avatar-animation='resting-expression']",
     );
     const sleepingMouthAnimation = host.querySelector<SVGAnimateElement>(
       "animate[data-avatar-animation='sleeping-mouth']",
     );
     const huffAnimations = host.querySelectorAll<SVGAnimateElement>(
       "animate[data-avatar-animation='huff-expression']",
+    );
+    const tiredAnimations = host.querySelectorAll<SVGAnimateElement>(
+      "animate[data-avatar-animation='tired-expression']",
     );
     const thinkingArm = host.querySelector<SVGGElement>(
       "#neutral-right-hand-and-forearm",
@@ -500,9 +562,19 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         animation.dataset.originalValues = originalValues;
 
         const paths = originalValues.split(";");
-        const neutralPath = paths[0];
+        let neutralPath = paths[0];
         const smilePath = paths[2];
         if (!neutralPath || !smilePath) return;
+
+        if (
+          alternateEyelidActive &&
+          animation.parentElement?.id === "neutral-moustach-mouth"
+        ) {
+          neutralPath =
+            restingMouthAnimation?.dataset.originalValues?.split(";")[1] ??
+            restingMouthAnimation?.getAttribute("values")?.split(";")[1] ??
+            neutralPath;
+        }
 
         animation.setAttribute(
           "values",
@@ -562,6 +634,17 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           if (alternateEyelidActive && alternatePath) {
             if (isThinking) startPath = alternatePath;
             else endPath = alternatePath;
+          }
+        } else if (
+          alternateEyelidActive &&
+          animation.parentElement?.id === "neutral-moustach-mouth"
+        ) {
+          const warmPath =
+            restingMouthAnimation?.dataset.originalValues?.split(";")[1] ??
+            restingMouthAnimation?.getAttribute("values")?.split(";")[1];
+          if (warmPath) {
+            if (isThinking) startPath = warmPath;
+            else endPath = warmPath;
           }
         }
         if (
@@ -779,26 +862,28 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     window.addEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
 
     const setRestingEyelid = (useAlternate: boolean) => {
-      if (!restingEyelidAnimation || thinkingActive || sleepingActive) return;
-      const originalValues =
-        restingEyelidAnimation.dataset.originalValues ??
-        restingEyelidAnimation.getAttribute("values") ??
-        "";
-      restingEyelidAnimation.dataset.originalValues = originalValues;
-      const [currentPath, alternatePath] = originalValues.split(";");
-      if (!currentPath || !alternatePath) return;
+      if (!restingExpressionAnimations.length || thinkingActive || sleepingActive) return;
+      restingExpressionAnimations.forEach((animation) => {
+        const originalValues =
+          animation.dataset.originalValues ??
+          animation.getAttribute("values") ??
+          "";
+        animation.dataset.originalValues = originalValues;
+        const [currentPath, alternatePath] = originalValues.split(";");
+        if (!currentPath || !alternatePath) return;
 
-      restingEyelidAnimation.setAttribute(
-        "values",
-        useAlternate
-          ? `${currentPath};${alternatePath}`
-          : `${alternatePath};${currentPath}`,
-      );
-      restingEyelidAnimation.setAttribute("keyTimes", "0;1");
-      restingEyelidAnimation.setAttribute("keySplines", ".45 0 .55 1");
-      restingEyelidAnimation.setAttribute("calcMode", "spline");
-      restingEyelidAnimation.setAttribute("dur", "900ms");
-      restingEyelidAnimation.beginElement();
+        animation.setAttribute(
+          "values",
+          useAlternate
+            ? `${currentPath};${alternatePath}`
+            : `${alternatePath};${currentPath}`,
+        );
+        animation.setAttribute("keyTimes", "0;1");
+        animation.setAttribute("keySplines", ".45 0 .55 1");
+        animation.setAttribute("calcMode", "spline");
+        animation.setAttribute("dur", "900ms");
+        animation.beginElement();
+      });
       alternateEyelidActive = useAlternate;
       scheduleRestingEyelid();
     };
@@ -875,8 +960,6 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       sleepAnimations = [];
       sleepingActive = true;
 
-      const startedWhileThinking = thinkingActive;
-      const startedWhileSmiling = smiling;
       if (thinkingActive) {
         thinkingActive = false;
         setThinkingPosture(false);
@@ -886,22 +969,65 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         smiling = false;
       }
 
-      headTiltAnimation?.cancel();
+      tiredAnimations.forEach((animation) => {
+        const originalValues =
+          animation.dataset.originalValues ??
+          animation.getAttribute("values") ??
+          "";
+        animation.dataset.originalValues = originalValues;
+        animation.setAttribute("values", originalValues);
+        animation.setAttribute("keyTimes", "0;1");
+        animation.setAttribute("keySplines", ".42 0 1 1");
+        animation.setAttribute("calcMode", "spline");
+        animation.setAttribute("dur", "440ms");
+        animation.setAttribute("fill", "freeze");
+        animation.beginElement();
+      });
+
+      thinkingHead.style.transformBox = "view-box";
+      thinkingHead.style.transformOrigin = "331.414px 470.816px";
+      sleepAnimations.push(
+        thinkingHead.animate(
+          [
+            { transform: "translateY(0) rotate(0deg) scale(1)" },
+            { transform: "translateY(-9px) rotate(2.4deg) scale(1.025)" },
+          ],
+          {
+            duration: 440,
+            easing: "ease-in",
+            fill: "forwards",
+          },
+        ),
+      );
+
+      sleepTimer = window.setTimeout(() => {
+        headTiltAnimation?.cancel();
+        tiredAnimations.forEach((animation) => {
+          const id = animation.parentElement?.id;
+          if (id?.includes("pupil") || id === "neutral-moustach-mouth") return;
+          const [neutralPath, tiredPath] =
+            animation.dataset.originalValues?.split(";") ?? [];
+          if (!neutralPath || !tiredPath) return;
+          animation.setAttribute("values", `${tiredPath};${neutralPath}`);
+          animation.setAttribute("keyTimes", "0;1");
+          animation.setAttribute("keySplines", ".25 .1 .25 1");
+          animation.setAttribute("dur", "650ms");
+          animation.beginElement();
+        });
       thinkingHead.style.transformBox = "view-box";
       thinkingHead.style.transformOrigin = "331.414px 470.816px";
       sleepAnimations.push(
         thinkingHead.animate(
           [
             {
-              transform: startedWhileThinking
-                ? "rotate(10.983deg)"
-                : "rotate(0deg)",
+              transform:
+                "translateY(-9px) rotate(2.4deg) scale(1.025)",
             },
             { transform: "rotate(-19.237deg)" },
           ],
           {
             duration: 650,
-            easing: "cubic-bezier(.45, 0, .25, 1)",
+            easing: "ease",
             fill: "forwards",
           },
         ),
@@ -915,7 +1041,13 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         animation.dataset.originalValues = originalValues;
         const [openPath, closedPath] = originalValues.split(";");
         if (!openPath || !closedPath) return;
-        animation.setAttribute("values", `${openPath};${closedPath}`);
+        const tiredPupil = Array.from(tiredAnimations).find(
+          (tiredAnimation) =>
+            tiredAnimation.parentElement?.id === animation.parentElement?.id,
+        );
+        const tiredPath =
+          tiredPupil?.dataset.originalValues?.split(";")[1] ?? openPath;
+        animation.setAttribute("values", `${tiredPath};${closedPath}`);
         animation.setAttribute("keyTimes", "0;1");
         animation.setAttribute("keySplines", ".45 0 .55 1");
         animation.setAttribute("calcMode", "spline");
@@ -932,24 +1064,13 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         sleepingMouthAnimation.dataset.originalValues = originalValues;
         const [neutralMouthPath, sleepingMouthPath] = originalValues.split(";");
         if (neutralMouthPath && sleepingMouthPath) {
-          let startingMouthPath = neutralMouthPath;
-          if (startedWhileThinking) {
-            const thinkingMouth = Array.from(thinkingExpressionAnimations).find(
-              (animation) =>
-                animation.parentElement?.id === "neutral-moustach-mouth",
-            );
-            startingMouthPath =
-              thinkingMouth?.dataset.originalValues?.split(";")[1] ??
-              startingMouthPath;
-          } else if (startedWhileSmiling) {
-            const smilingMouth = Array.from(morphAnimations).find(
-              (animation) =>
-                animation.parentElement?.id === "neutral-moustach-mouth",
-            );
-            startingMouthPath =
-              smilingMouth?.dataset.originalValues?.split(";")[2] ??
-              startingMouthPath;
-          }
+          const tiredMouth = Array.from(tiredAnimations).find(
+            (animation) =>
+              animation.parentElement?.id === "neutral-moustach-mouth",
+          );
+          const startingMouthPath =
+            tiredMouth?.dataset.originalValues?.split(";")[1] ??
+            neutralMouthPath;
 
           sleepingMouthAnimation.setAttribute(
             "values",
@@ -1092,6 +1213,9 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
                   blinkAnimations.forEach((animation) =>
                     animation.setAttribute("fill", "remove"),
                   );
+                  tiredAnimations.forEach((animation) =>
+                    animation.setAttribute("fill", "remove"),
+                  );
                   sleepingActive = false;
                   scheduleRestingEyelid();
                   blinkTimer = window.setTimeout(
@@ -1103,7 +1227,8 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             }, 650);
           }, 900);
         }, 3_000);
-      }, 650);
+        }, 650);
+      }, 440);
     };
 
     window.addEventListener(AVATAR_SLEEPING_EVENT, startSleeping);
