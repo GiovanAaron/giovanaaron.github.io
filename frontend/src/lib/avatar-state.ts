@@ -1,5 +1,6 @@
 export const AVATAR_THINKING_EVENT = "portfolio-avatar-thinking";
 export const AVATAR_SLEEPING_EVENT = "portfolio-avatar-sleeping";
+export const AVATAR_LIGHT_REACTION_EVENT = "portfolio-avatar-light-reaction";
 
 export function setAvatarThinking(isThinking: boolean) {
   window.dispatchEvent(
@@ -9,4 +10,8 @@ export function setAvatarThinking(isThinking: boolean) {
 
 export function triggerAvatarSleeping() {
   window.dispatchEvent(new Event(AVATAR_SLEEPING_EVENT));
+}
+
+export function triggerAvatarLightReaction() {
+  window.dispatchEvent(new Event(AVATAR_LIGHT_REACTION_EVENT));
 }

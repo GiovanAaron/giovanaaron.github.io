@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
+  AVATAR_LIGHT_REACTION_EVENT,
   AVATAR_SLEEPING_EVENT,
   AVATAR_THINKING_EVENT,
 } from "@/lib/avatar-state";
@@ -17,6 +18,7 @@ const SECONDARY_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-warm-2.svg";
 const SLEEPING_SOURCE = "/assets/me-red-sleeping.svg";
 const HUFF_SOURCE = "/assets/me-red-huff.svg";
 const TIRED_SOURCE = "/assets/me-red-tired-expression.svg";
+const EYEROLL_SOURCE = "/assets/me-red-eyeroll-expression.svg";
 const BREATHS_BEFORE_SMILE = { min: 4, max: 6 };
 const THINKING_EXPRESSION_PATHS = [
   "neutral-glasses-fill",
@@ -92,6 +94,7 @@ function prepareInlineSvg(
   sleepingSource: string,
   huffSource: string,
   tiredSource: string,
+  eyeRollSource: string,
 ) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
   const expressionDocument = new DOMParser().parseFromString(
@@ -128,6 +131,10 @@ function prepareInlineSvg(
   );
   const tiredDocument = new DOMParser().parseFromString(
     tiredSource,
+    "image/svg+xml",
+  );
+  const eyeRollDocument = new DOMParser().parseFromString(
+    eyeRollSource,
     "image/svg+xml",
   );
   const svg = document.documentElement;
@@ -326,6 +333,22 @@ function prepareInlineSvg(
     );
     animation.setAttribute("data-avatar-animation", "tired-expression");
     targetPath.appendChild(animation);
+
+    const eyeRollPathData = eyeRollDocument
+      .querySelector(`#${id}`)
+      ?.getAttribute("d");
+    if (!eyeRollPathData) return;
+    const eyeRollAnimation = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "animate",
+    );
+    eyeRollAnimation.setAttribute("attributeName", "d");
+    eyeRollAnimation.setAttribute(
+      "values",
+      `${neutralPath};${eyeRollPathData}`,
+    );
+    eyeRollAnimation.setAttribute("data-avatar-animation", "eyeroll-expression");
+    targetPath.appendChild(eyeRollAnimation);
   });
   importPathAnimations(
     thinkingDocument,
@@ -408,6 +431,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         SLEEPING_SOURCE,
         HUFF_SOURCE,
         TIRED_SOURCE,
+        EYEROLL_SOURCE,
       ].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) throw new Error("Could not load the animated avatar");
@@ -426,6 +450,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           sleeping,
           huff,
           tired,
+          eyeRoll,
         ]) =>
           prepareInlineSvg(
             avatar,
@@ -438,6 +463,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             sleeping,
             huff,
             tired,
+            eyeRoll,
           ),
       )
       .then(setMarkup)
@@ -487,6 +513,9 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const tiredAnimations = host.querySelectorAll<SVGAnimateElement>(
       "animate[data-avatar-animation='tired-expression']",
     );
+    const eyeRollAnimations = host.querySelectorAll<SVGAnimateElement>(
+      "animate[data-avatar-animation='eyeroll-expression']",
+    );
     const thinkingArm = host.querySelector<SVGGElement>(
       "#neutral-right-hand-and-forearm",
     );
@@ -521,11 +550,21 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     let blinkTimer = 0;
     let eyelidTimer = 0;
     let sleepTimer = 0;
+    let lightReactionTimer = 0;
     let alternateEyelidActive = false;
     let breathsUntilSmile = randomWholeNumber(
       BREATHS_BEFORE_SMILE.min,
       BREATHS_BEFORE_SMILE.max,
     );
+
+    const removeFrozenAnimation = (animation: SVGAnimateElement) => {
+      animation.setAttribute("fill", "remove");
+      try {
+        animation.endElement();
+      } catch {
+        // The animation may already be inactive; fill="remove" is sufficient.
+      }
+    };
 
     breath.style.transformBox = "view-box";
     breath.style.transformOrigin = "285px 870px";
@@ -732,23 +771,23 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
                   offset: 0,
                 },
                 {
-                  transform: "rotate(126.05deg) translate(0.55px, -0.35px)",
+                  transform: "rotate(126.05deg) translate(1.4px, -0.9px)",
                   offset: 0.035,
                 },
                 {
-                  transform: "rotate(125.82deg) translate(0.2px, -0.65px)",
+                  transform: "rotate(125.82deg) translate(0.5px, -1.65px)",
                   offset: 0.07,
                 },
                 {
-                  transform: "rotate(125.65deg) translate(-0.5px, -0.2px)",
+                  transform: "rotate(125.65deg) translate(-1.25px, -0.5px)",
                   offset: 0.105,
                 },
                 {
-                  transform: "rotate(125.78deg) translate(-0.25px, 0.45px)",
+                  transform: "rotate(125.78deg) translate(-0.65px, 1.15px)",
                   offset: 0.14,
                 },
                 {
-                  transform: "rotate(126.02deg) translate(0.45px, 0.2px)",
+                  transform: "rotate(126.02deg) translate(1.15px, 0.5px)",
                   offset: 0.175,
                 },
                 {
@@ -1087,6 +1126,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           sleepingMouthAnimation.getAttribute("values") ??
           "";
         sleepingMouthAnimation.dataset.originalValues = originalValues;
+        sleepingMouthAnimation.setAttribute("fill", "freeze");
         const [neutralMouthPath, sleepingMouthPath] = originalValues.split(";");
         if (neutralMouthPath && sleepingMouthPath) {
           const tiredMouth = Array.from(tiredAnimations).find(
@@ -1172,6 +1212,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
                 animation.getAttribute("values") ??
                 "";
               animation.dataset.originalValues = originalValues;
+              animation.setAttribute("fill", "freeze");
               const [neutralPath, huffPath] = originalValues.split(";");
               if (!neutralPath || !huffPath) return;
 
@@ -1258,6 +1299,178 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
     window.addEventListener(AVATAR_SLEEPING_EVENT, startSleeping);
 
+    let lightReactionAnimations: Animation[] = [];
+    const startLightReaction = () => {
+      if (!thinkingHead) return;
+
+      window.clearTimeout(sleepTimer);
+      window.clearTimeout(blinkTimer);
+      window.clearTimeout(eyelidTimer);
+      window.clearTimeout(lightReactionTimer);
+      sleepAnimations.forEach((animation) => animation.cancel());
+      sleepAnimations = [];
+      lightReactionAnimations.forEach((animation) => animation.cancel());
+      lightReactionAnimations = [];
+      sleepingMouthAnimation?.setAttribute("fill", "remove");
+      huffAnimations.forEach((animation) =>
+        animation.setAttribute("fill", "remove"),
+      );
+      blinkAnimations.forEach((animation) =>
+        animation.setAttribute("fill", "remove"),
+      );
+      sleepingActive = true;
+
+      if (thinkingActive) {
+        thinkingActive = false;
+        setThinkingPosture(false);
+      }
+      if (smiling) {
+        smiling = false;
+        morphExpression(false);
+      }
+
+      tiredAnimations.forEach((animation) => {
+        const originalValues =
+          animation.dataset.originalValues ??
+          animation.getAttribute("values") ??
+          "";
+        animation.dataset.originalValues = originalValues;
+        const [neutralPath, tiredPath] = originalValues.split(";");
+        if (!neutralPath || !tiredPath) return;
+        const warmMouthPath =
+          animation.parentElement?.id === "neutral-moustach-mouth" &&
+          alternateEyelidActive
+            ? restingMouthAnimation?.dataset.originalValues?.split(";")[1] ??
+              restingMouthAnimation?.getAttribute("values")?.split(";")[1]
+            : undefined;
+        animation.setAttribute(
+          "values",
+          `${warmMouthPath ?? neutralPath};${tiredPath}`,
+        );
+        animation.setAttribute("keyTimes", "0;1");
+        animation.setAttribute("keySplines", ".42 0 1 1");
+        animation.setAttribute("calcMode", "spline");
+        animation.setAttribute("dur", "360ms");
+        animation.setAttribute("fill", "freeze");
+        animation.beginElement();
+      });
+
+      thinkingHead.style.transformBox = "view-box";
+      thinkingHead.style.transformOrigin = "331.414px 470.816px";
+      lightReactionAnimations.push(
+        thinkingHead.animate(
+          [
+            { transform: "translateY(0) rotate(0deg) scale(1)" },
+            { transform: "translateY(-7px) rotate(2deg) scale(1.018)" },
+          ],
+          { duration: 360, easing: "ease-in", fill: "forwards" },
+        ),
+      );
+
+      lightReactionTimer = window.setTimeout(() => {
+        blinkAnimations.forEach((animation) => {
+          const [, closedPath] =
+            animation.dataset.originalValues?.split(";") ?? [];
+          const tiredPupil = Array.from(tiredAnimations).find(
+            (tiredAnimation) =>
+              tiredAnimation.parentElement?.id === animation.parentElement?.id,
+          );
+          const tiredPath =
+            tiredPupil?.dataset.originalValues?.split(";")[1];
+          if (!tiredPath || !closedPath) return;
+          animation.setAttribute(
+            "values",
+            `${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath}`,
+          );
+          animation.setAttribute(
+            "keyTimes",
+            "0;.08;.16;.24;.32;.4;.48;.56;.64;.72;.8;.88;1",
+          );
+          animation.setAttribute("calcMode", "linear");
+          animation.setAttribute("dur", "960ms");
+          animation.setAttribute("fill", "freeze");
+          animation.beginElement();
+        });
+
+        lightReactionTimer = window.setTimeout(() => {
+          eyeRollAnimations.forEach((animation) => {
+            const originalValues =
+              animation.dataset.originalValues ??
+              animation.getAttribute("values") ??
+              "";
+            animation.dataset.originalValues = originalValues;
+            const [, eyeRollPath] = originalValues.split(";");
+            const tiredAnimation = Array.from(tiredAnimations).find(
+              (tired) => tired.parentElement?.id === animation.parentElement?.id,
+            );
+            const tiredPath =
+              tiredAnimation?.dataset.originalValues?.split(";")[1];
+            if (!tiredPath || !eyeRollPath) return;
+            animation.setAttribute("values", `${tiredPath};${eyeRollPath}`);
+            animation.setAttribute("keyTimes", "0;1");
+            animation.setAttribute("keySplines", ".25 .1 .25 1");
+            animation.setAttribute("calcMode", "spline");
+            animation.setAttribute("dur", "420ms");
+            animation.setAttribute("fill", "freeze");
+            animation.beginElement();
+          });
+
+          lightReactionTimer = window.setTimeout(() => {
+            eyeRollAnimations.forEach((animation) => {
+              const [neutralPath, eyeRollPath] =
+                animation.dataset.originalValues?.split(";") ?? [];
+              if (!neutralPath || !eyeRollPath) return;
+              const warmMouthPath =
+                animation.parentElement?.id === "neutral-moustach-mouth" &&
+                alternateEyelidActive
+                  ? restingMouthAnimation?.dataset.originalValues?.split(
+                      ";",
+                    )[1] ??
+                    restingMouthAnimation
+                      ?.getAttribute("values")
+                      ?.split(";")[1]
+                  : undefined;
+              animation.setAttribute(
+                "values",
+                `${eyeRollPath};${warmMouthPath ?? neutralPath}`,
+              );
+              animation.setAttribute("dur", "650ms");
+              animation.beginElement();
+            });
+            lightReactionAnimations.push(
+              thinkingHead.animate(
+                [
+                  { transform: "translateY(-7px) rotate(2deg) scale(1.018)" },
+                  { transform: "translateY(0) rotate(0deg) scale(1)" },
+                ],
+                { duration: 650, easing: "ease", fill: "forwards" },
+              ),
+            );
+
+            lightReactionTimer = window.setTimeout(() => {
+              lightReactionAnimations.forEach((animation) =>
+                animation.cancel(),
+              );
+              lightReactionAnimations = [];
+              tiredAnimations.forEach(removeFrozenAnimation);
+              blinkAnimations.forEach(removeFrozenAnimation);
+              // Keep the completed eye-roll return frozen at its neutral end
+              // value. Removing this final layer can expose an older tired
+              // SMIL interval in Chromium; the next expression supersedes it.
+              sleepingActive = false;
+              scheduleRestingEyelid();
+              blinkTimer = window.setTimeout(
+                blink,
+                randomBetween(4_000, 7_000),
+              );
+            }, 650);
+          }, 700);
+        }, 960);
+      }, 360);
+    };
+
+    window.addEventListener(AVATAR_LIGHT_REACTION_EVENT, startLightReaction);
+
     const swayAnimations = Array.from(headParts, (part) =>
       part.animate(
         [
@@ -1335,12 +1548,18 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       window.clearTimeout(blinkTimer);
       window.clearTimeout(eyelidTimer);
       window.clearTimeout(sleepTimer);
+      window.clearTimeout(lightReactionTimer);
       sleepAnimations.forEach((animation) => animation.cancel());
+      lightReactionAnimations.forEach((animation) => animation.cancel());
       window.removeEventListener("pointermove", updateGazeTarget);
       window.removeEventListener("pointerleave", resetGaze);
       window.removeEventListener("blur", resetGaze);
       window.removeEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
       window.removeEventListener(AVATAR_SLEEPING_EVENT, startSleeping);
+      window.removeEventListener(
+        AVATAR_LIGHT_REACTION_EVENT,
+        startLightReaction,
+      );
     };
   }, [markup]);
 
