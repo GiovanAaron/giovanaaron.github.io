@@ -18,6 +18,7 @@ const SECONDARY_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-warm-2.svg";
 const SLEEPING_SOURCE = "/assets/me-red-sleeping.svg";
 const HUFF_SOURCE = "/assets/me-red-huff.svg";
 const TIRED_SOURCE = "/assets/me-red-tired-expression.svg";
+const HUFF_RECOIL_SOURCE = "/assets/me-red-huff-recoil.svg";
 const EYEROLL_SOURCE = "/assets/me-red-eyeroll-expression.svg";
 const BREATHS_BEFORE_SMILE = { min: 4, max: 6 };
 const THINKING_EXPRESSION_PATHS = [
@@ -83,6 +84,29 @@ function rotateSimplePath(
   return transformed.join(" ");
 }
 
+function translateSimplePath(path: string, deltaX: number, deltaY: number) {
+  const tokens = path.match(/[A-Za-z]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? [];
+  const transformed: string[] = [];
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (/^[A-Za-z]$/.test(token)) {
+      transformed.push(token);
+      continue;
+    }
+
+    const nextToken = tokens[index + 1];
+    if (!nextToken || /^[A-Za-z]$/.test(nextToken)) return path;
+    transformed.push(
+      String(Number((Number(token) + deltaX).toFixed(3))),
+      String(Number((Number(nextToken) + deltaY).toFixed(3))),
+    );
+    index += 1;
+  }
+
+  return transformed.join(" ");
+}
+
 function prepareInlineSvg(
   source: string,
   expressionSource: string,
@@ -94,6 +118,7 @@ function prepareInlineSvg(
   sleepingSource: string,
   huffSource: string,
   tiredSource: string,
+  huffRecoilSource: string,
   eyeRollSource: string,
 ) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
@@ -131,6 +156,10 @@ function prepareInlineSvg(
   );
   const tiredDocument = new DOMParser().parseFromString(
     tiredSource,
+    "image/svg+xml",
+  );
+  const huffRecoilDocument = new DOMParser().parseFromString(
+    huffRecoilSource,
     "image/svg+xml",
   );
   const eyeRollDocument = new DOMParser().parseFromString(
@@ -350,6 +379,29 @@ function prepareInlineSvg(
     eyeRollAnimation.setAttribute("data-avatar-animation", "eyeroll-expression");
     targetPath.appendChild(eyeRollAnimation);
   });
+
+  TIRED_PATHS.forEach((id) => {
+    const targetPath = svg.querySelector(`#${id}`);
+    const bakedHuffRecoilPathData = huffRecoilDocument
+      .querySelector(`#${id}`)
+      ?.getAttribute("d");
+    const neutralPath = targetPath?.getAttribute("d");
+    if (!targetPath || !neutralPath || !bakedHuffRecoilPathData) return;
+
+    const huffRecoilPathData = translateSimplePath(
+      bakedHuffRecoilPathData,
+      -38,
+      -39,
+    );
+    const animation = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "animate",
+    );
+    animation.setAttribute("attributeName", "d");
+    animation.setAttribute("values", `${neutralPath};${huffRecoilPathData}`);
+    animation.setAttribute("data-avatar-animation", "huff-recoil-expression");
+    targetPath.appendChild(animation);
+  });
   importPathAnimations(
     thinkingDocument,
     "#neutral-upper-arm-outline > animate[attributeName='d']",
@@ -431,10 +483,20 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         SLEEPING_SOURCE,
         HUFF_SOURCE,
         TIRED_SOURCE,
+        HUFF_RECOIL_SOURCE,
         EYEROLL_SOURCE,
       ].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
-        if (!response.ok) throw new Error("Could not load the animated avatar");
+        if (!response.ok) {
+          // The legacy wake-up huff is optional. Keeping its empty document in
+          // the argument slot lets the avatar render when that asset is removed.
+          if (source === HUFF_SOURCE && response.status === 404) {
+            return "<svg xmlns=\"http://www.w3.org/2000/svg\" />";
+          }
+          throw new Error(
+            `Could not load the animated avatar asset: ${source} (${response.status})`,
+          );
+        }
         return response.text();
       }),
     )
@@ -450,6 +512,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           sleeping,
           huff,
           tired,
+          huffRecoil,
           eyeRoll,
         ]) =>
           prepareInlineSvg(
@@ -463,6 +526,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             sleeping,
             huff,
             tired,
+            huffRecoil,
             eyeRoll,
           ),
       )
@@ -512,6 +576,9 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     );
     const tiredAnimations = host.querySelectorAll<SVGAnimateElement>(
       "animate[data-avatar-animation='tired-expression']",
+    );
+    const huffRecoilAnimations = host.querySelectorAll<SVGAnimateElement>(
+      "animate[data-avatar-animation='huff-recoil-expression']",
     );
     const eyeRollAnimations = host.querySelectorAll<SVGAnimateElement>(
       "animate[data-avatar-animation='eyeroll-expression']",
@@ -564,6 +631,24 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       } catch {
         // The animation may already be inactive; fill="remove" is sufficient.
       }
+    };
+
+    const resetSmilAnimation = (animation: SVGAnimateElement) => {
+      const neutralPath =
+        animation.dataset.originalValues?.split(";")[0] ??
+        animation.getAttribute("values")?.split(";")[0];
+      if (!neutralPath) {
+        removeFrozenAnimation(animation);
+        return;
+      }
+
+      animation.setAttribute("restart", "always");
+      animation.setAttribute("values", `${neutralPath};${neutralPath}`);
+      animation.setAttribute("keyTimes", "0;1");
+      animation.setAttribute("calcMode", "linear");
+      animation.setAttribute("dur", "1ms");
+      animation.setAttribute("fill", "remove");
+      animation.beginElement();
     };
 
     breath.style.transformBox = "view-box";
@@ -1017,11 +1102,17 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     const startSleeping = () => {
       if (!thinkingHead || !sleepMotion) return;
 
+      window.clearTimeout(lightReactionTimer);
       window.clearTimeout(sleepTimer);
       window.clearTimeout(blinkTimer);
       window.clearTimeout(eyelidTimer);
+      lightReactionAnimations.forEach((animation) => animation.cancel());
+      lightReactionAnimations = [];
       sleepAnimations.forEach((animation) => animation.cancel());
       sleepAnimations = [];
+      huffRecoilAnimations.forEach(removeFrozenAnimation);
+      blinkAnimations.forEach(removeFrozenAnimation);
+      eyeRollAnimations.forEach(removeFrozenAnimation);
       sleepingActive = true;
 
       if (thinkingActive) {
@@ -1235,9 +1326,17 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
               const [neutralMouthPath, sleepingMouthPath] =
                 sleepingMouthAnimation.dataset.originalValues?.split(";") ?? [];
               if (neutralMouthPath && sleepingMouthPath) {
+                const restingMouthPath = alternateEyelidActive
+                  ? restingMouthAnimation?.dataset.originalValues?.split(
+                      ";",
+                    )[1] ??
+                    restingMouthAnimation
+                      ?.getAttribute("values")
+                      ?.split(";")[1]
+                  : undefined;
                 sleepingMouthAnimation.setAttribute(
                   "values",
-                  `${sleepingMouthPath};${neutralMouthPath}`,
+                  `${sleepingMouthPath};${restingMouthPath ?? neutralMouthPath}`,
                 );
                 sleepingMouthAnimation.setAttribute("dur", "650ms");
                 sleepingMouthAnimation.beginElement();
@@ -1276,18 +1375,20 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
                 sleepTimer = window.setTimeout(() => {
                   sleepAnimations.forEach((animation) => animation.cancel());
                   sleepAnimations = [];
-                  blinkAnimations.forEach((animation) =>
-                    animation.setAttribute("fill", "remove"),
-                  );
-                  tiredAnimations.forEach((animation) =>
-                    animation.setAttribute("fill", "remove"),
-                  );
+                  blinkAnimations.forEach(resetSmilAnimation);
+                  tiredAnimations.forEach(resetSmilAnimation);
+                  huffAnimations.forEach(resetSmilAnimation);
+                  if (sleepingMouthAnimation) {
+                    resetSmilAnimation(sleepingMouthAnimation);
+                  }
                   sleepingActive = false;
-                  scheduleRestingEyelid();
-                  blinkTimer = window.setTimeout(
-                    blink,
-                    randomBetween(4_000, 7_000),
-                  );
+                  sleepTimer = window.setTimeout(() => {
+                    scheduleRestingEyelid();
+                    blinkTimer = window.setTimeout(
+                      blink,
+                      randomBetween(4_000, 7_000),
+                    );
+                  }, 20);
                 }, 500);
               }, 500);
             }, 650);
@@ -1311,13 +1412,12 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       sleepAnimations = [];
       lightReactionAnimations.forEach((animation) => animation.cancel());
       lightReactionAnimations = [];
-      sleepingMouthAnimation?.setAttribute("fill", "remove");
-      huffAnimations.forEach((animation) =>
-        animation.setAttribute("fill", "remove"),
-      );
-      blinkAnimations.forEach((animation) =>
-        animation.setAttribute("fill", "remove"),
-      );
+      if (sleepingMouthAnimation) {
+        removeFrozenAnimation(sleepingMouthAnimation);
+      }
+      huffAnimations.forEach(removeFrozenAnimation);
+      tiredAnimations.forEach(removeFrozenAnimation);
+      blinkAnimations.forEach(removeFrozenAnimation);
       sleepingActive = true;
 
       if (thinkingActive) {
@@ -1329,23 +1429,26 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         morphExpression(false);
       }
 
-      tiredAnimations.forEach((animation) => {
+      huffRecoilAnimations.forEach((animation) => {
         const originalValues =
           animation.dataset.originalValues ??
           animation.getAttribute("values") ??
           "";
         animation.dataset.originalValues = originalValues;
-        const [neutralPath, tiredPath] = originalValues.split(";");
-        if (!neutralPath || !tiredPath) return;
-        const warmMouthPath =
-          animation.parentElement?.id === "neutral-moustach-mouth" &&
-          alternateEyelidActive
-            ? restingMouthAnimation?.dataset.originalValues?.split(";")[1] ??
-              restingMouthAnimation?.getAttribute("values")?.split(";")[1]
-            : undefined;
+        const [neutralPath, recoilPath] = originalValues.split(";");
+        if (!neutralPath || !recoilPath) return;
+        const restingAnimation = alternateEyelidActive
+          ? Array.from(restingExpressionAnimations).find(
+              (resting) =>
+                resting.parentElement?.id === animation.parentElement?.id,
+            )
+          : undefined;
+        const warmRestingPath =
+          restingAnimation?.dataset.originalValues?.split(";")[1] ??
+          restingAnimation?.getAttribute("values")?.split(";")[1];
         animation.setAttribute(
           "values",
-          `${warmMouthPath ?? neutralPath};${tiredPath}`,
+          `${warmRestingPath ?? neutralPath};${recoilPath}`,
         );
         animation.setAttribute("keyTimes", "0;1");
         animation.setAttribute("keySplines", ".42 0 1 1");
@@ -1361,7 +1464,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         thinkingHead.animate(
           [
             { transform: "translateY(0) rotate(0deg) scale(1)" },
-            { transform: "translateY(-7px) rotate(2deg) scale(1.018)" },
+            { transform: "translate(38px, 39px)" },
           ],
           { duration: 360, easing: "ease-in", fill: "forwards" },
         ),
@@ -1371,28 +1474,37 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         blinkAnimations.forEach((animation) => {
           const [, closedPath] =
             animation.dataset.originalValues?.split(";") ?? [];
-          const tiredPupil = Array.from(tiredAnimations).find(
-            (tiredAnimation) =>
-              tiredAnimation.parentElement?.id === animation.parentElement?.id,
+          const recoilPupil = Array.from(huffRecoilAnimations).find(
+            (recoilAnimation) =>
+              recoilAnimation.parentElement?.id === animation.parentElement?.id,
           );
-          const tiredPath =
-            tiredPupil?.dataset.originalValues?.split(";")[1];
-          if (!tiredPath || !closedPath) return;
+          const recoilPath =
+            recoilPupil?.dataset.originalValues?.split(";")[1];
+          if (!recoilPath || !closedPath) return;
           animation.setAttribute(
             "values",
-            `${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath};${closedPath};${tiredPath}`,
+            `${recoilPath};${closedPath};${recoilPath};${closedPath};${recoilPath};${closedPath};${recoilPath};${closedPath};${recoilPath}`,
           );
           animation.setAttribute(
             "keyTimes",
-            "0;.08;.16;.24;.32;.4;.48;.56;.64;.72;.8;.88;1",
+            "0;.125;.25;.375;.5;.625;.75;.875;1",
           );
           animation.setAttribute("calcMode", "linear");
-          animation.setAttribute("dur", "960ms");
+          animation.setAttribute("dur", "640ms");
           animation.setAttribute("fill", "freeze");
           animation.beginElement();
         });
 
         lightReactionTimer = window.setTimeout(() => {
+          lightReactionAnimations.push(
+            thinkingHead.animate(
+              [
+                { transform: "translate(38px, 39px)" },
+                { transform: "translate(0, 0)" },
+              ],
+              { duration: 420, easing: "ease", fill: "forwards" },
+            ),
+          );
           eyeRollAnimations.forEach((animation) => {
             const originalValues =
               animation.dataset.originalValues ??
@@ -1400,13 +1512,14 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
               "";
             animation.dataset.originalValues = originalValues;
             const [, eyeRollPath] = originalValues.split(";");
-            const tiredAnimation = Array.from(tiredAnimations).find(
-              (tired) => tired.parentElement?.id === animation.parentElement?.id,
+            const recoilAnimation = Array.from(huffRecoilAnimations).find(
+              (recoil) =>
+                recoil.parentElement?.id === animation.parentElement?.id,
             );
-            const tiredPath =
-              tiredAnimation?.dataset.originalValues?.split(";")[1];
-            if (!tiredPath || !eyeRollPath) return;
-            animation.setAttribute("values", `${tiredPath};${eyeRollPath}`);
+            const recoilPath =
+              recoilAnimation?.dataset.originalValues?.split(";")[1];
+            if (!recoilPath || !eyeRollPath) return;
+            animation.setAttribute("values", `${recoilPath};${eyeRollPath}`);
             animation.setAttribute("keyTimes", "0;1");
             animation.setAttribute("keySplines", ".25 .1 .25 1");
             animation.setAttribute("calcMode", "spline");
@@ -1437,35 +1550,25 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
               animation.setAttribute("dur", "650ms");
               animation.beginElement();
             });
-            lightReactionAnimations.push(
-              thinkingHead.animate(
-                [
-                  { transform: "translateY(-7px) rotate(2deg) scale(1.018)" },
-                  { transform: "translateY(0) rotate(0deg) scale(1)" },
-                ],
-                { duration: 650, easing: "ease", fill: "forwards" },
-              ),
-            );
-
             lightReactionTimer = window.setTimeout(() => {
               lightReactionAnimations.forEach((animation) =>
                 animation.cancel(),
               );
               lightReactionAnimations = [];
-              tiredAnimations.forEach(removeFrozenAnimation);
-              blinkAnimations.forEach(removeFrozenAnimation);
-              // Keep the completed eye-roll return frozen at its neutral end
-              // value. Removing this final layer can expose an older tired
-              // SMIL interval in Chromium; the next expression supersedes it.
+              huffRecoilAnimations.forEach(resetSmilAnimation);
+              blinkAnimations.forEach(resetSmilAnimation);
+              eyeRollAnimations.forEach(resetSmilAnimation);
               sleepingActive = false;
-              scheduleRestingEyelid();
-              blinkTimer = window.setTimeout(
-                blink,
-                randomBetween(4_000, 7_000),
-              );
+              lightReactionTimer = window.setTimeout(() => {
+                scheduleRestingEyelid();
+                blinkTimer = window.setTimeout(
+                  blink,
+                  randomBetween(4_000, 7_000),
+                );
+              }, 20);
             }, 650);
           }, 700);
-        }, 960);
+        }, 640);
       }, 360);
     };
 
