@@ -20,6 +20,8 @@ const HUFF_SOURCE = "/assets/me-red-huff.svg";
 const TIRED_SOURCE = "/assets/me-red-tired-expression.svg";
 const HUFF_RECOIL_SOURCE = "/assets/me-red-huff-recoil.svg";
 const EYEROLL_SOURCE = "/assets/me-red-eyeroll-expression.svg";
+const TSHIRT_LOGO_SOURCE =
+  "/assets/me-red-thinking-expression-t-shirt-logo-reference.svg";
 const BREATHS_BEFORE_SMILE = { min: 4, max: 6 };
 const THINKING_EXPRESSION_PATHS = [
   "neutral-glasses-fill",
@@ -120,6 +122,7 @@ function prepareInlineSvg(
   tiredSource: string,
   huffRecoilSource: string,
   eyeRollSource: string,
+  tshirtLogoSource: string,
 ) {
   const document = new DOMParser().parseFromString(source, "image/svg+xml");
   const expressionDocument = new DOMParser().parseFromString(
@@ -166,7 +169,21 @@ function prepareInlineSvg(
     eyeRollSource,
     "image/svg+xml",
   );
+  const tshirtLogoDocument = new DOMParser().parseFromString(
+    tshirtLogoSource,
+    "image/svg+xml",
+  );
   const svg = document.documentElement;
+
+  const neutralBody = svg.querySelector("#neutral-body");
+  const referenceLogo = tshirtLogoDocument.querySelector(
+    "#GioAi-tshirt-logo",
+  );
+  if (neutralBody && referenceLogo) {
+    const logo = document.importNode(referenceLogo, true);
+    logo.setAttribute("transform", "scale(0.08199026)");
+    neutralBody.appendChild(logo);
+  }
 
   // Warm 2 is the underlying neutral pose; the resting cycle spends most of
   // its time in the primary warm expression and occasionally returns here.
@@ -485,6 +502,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         TIRED_SOURCE,
         HUFF_RECOIL_SOURCE,
         EYEROLL_SOURCE,
+        TSHIRT_LOGO_SOURCE,
       ].map(async (source) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) {
@@ -514,6 +532,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           tired,
           huffRecoil,
           eyeRoll,
+          tshirtLogo,
         ]) =>
           prepareInlineSvg(
             avatar,
@@ -528,6 +547,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             tired,
             huffRecoil,
             eyeRoll,
+            tshirtLogo,
           ),
       )
       .then(setMarkup)
