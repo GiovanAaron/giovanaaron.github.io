@@ -880,7 +880,14 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     window.addEventListener(AVATAR_THINKING_EVENT, handleThinkingChange);
 
     const setRestingEyelid = (useAlternate: boolean) => {
-      if (!restingExpressionAnimations.length || thinkingActive || sleepingActive) return;
+      if (
+        !restingExpressionAnimations.length ||
+        smiling ||
+        thinkingActive ||
+        sleepingActive
+      ) {
+        return;
+      }
       restingExpressionAnimations.forEach((animation) => {
         const originalValues =
           animation.dataset.originalValues ??
@@ -907,7 +914,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     };
 
     function scheduleRestingEyelid() {
-      if (thinkingActive || sleepingActive) return;
+      if (smiling || thinkingActive || sleepingActive) return;
       const dwell = alternateEyelidActive
         ? randomBetween(9_000, 15_000)
         : randomBetween(3_000, 5_000);
@@ -1302,9 +1309,11 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             BREATHS_BEFORE_SMILE.min,
             BREATHS_BEFORE_SMILE.max,
           );
+          scheduleRestingEyelid();
         } else {
           breathsUntilSmile -= 1;
           if (breathsUntilSmile === 0) {
+            window.clearTimeout(eyelidTimer);
             smiling = true;
             morphExpression(true);
           }
