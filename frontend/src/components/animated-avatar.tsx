@@ -13,10 +13,11 @@ const THINKING_SOURCE = "/assets/me-red-animated-thinking.svg";
 const THINKING_EXPRESSION_SOURCE = "/assets/me-red-thinking-expression.svg";
 const CLOSED_EYES_SOURCE = "/assets/me-red-thinking-eyes-closed.svg";
 const ALTERNATE_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-warm.svg";
+const SECONDARY_NEUTRAL_SOURCE = "/assets/me-red-neutral-expression-warm-2.svg";
 const SLEEPING_SOURCE = "/assets/me-red-sleeping.svg";
 const HUFF_SOURCE = "/assets/me-red-huff.svg";
 const TIRED_SOURCE = "/assets/me-red-tired-expression.svg";
-const BREATHS_BEFORE_SMILE = { min: 2, max: 4 };
+const BREATHS_BEFORE_SMILE = { min: 4, max: 6 };
 const THINKING_EXPRESSION_PATHS = [
   "neutral-glasses-fill",
   "neutral-left-pupil",
@@ -87,6 +88,7 @@ function prepareInlineSvg(
   thinkingExpressionSource: string,
   closedEyesSource: string,
   alternateNeutralSource: string,
+  secondaryNeutralSource: string,
   sleepingSource: string,
   huffSource: string,
   tiredSource: string,
@@ -112,6 +114,10 @@ function prepareInlineSvg(
     alternateNeutralSource,
     "image/svg+xml",
   );
+  const secondaryNeutralDocument = new DOMParser().parseFromString(
+    secondaryNeutralSource,
+    "image/svg+xml",
+  );
   const sleepingDocument = new DOMParser().parseFromString(
     sleepingSource,
     "image/svg+xml",
@@ -125,6 +131,15 @@ function prepareInlineSvg(
     "image/svg+xml",
   );
   const svg = document.documentElement;
+
+  // Warm 2 is the underlying neutral pose; the resting cycle spends most of
+  // its time in the primary warm expression and occasionally returns here.
+  ["neutral-right-eye-lid", "neutral-moustach-mouth"].forEach((id) => {
+    const targetPath = svg.querySelector(`#${id}`);
+    const secondaryPath = secondaryNeutralDocument.querySelector(`#${id}`);
+    const pathData = secondaryPath?.getAttribute("d");
+    if (targetPath && pathData) targetPath.setAttribute("d", pathData);
+  });
 
   // Timing is owned by this component, not by the standalone asset.
   svg.querySelector("style")?.remove();
@@ -389,6 +404,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         THINKING_EXPRESSION_SOURCE,
         CLOSED_EYES_SOURCE,
         ALTERNATE_NEUTRAL_SOURCE,
+        SECONDARY_NEUTRAL_SOURCE,
         SLEEPING_SOURCE,
         HUFF_SOURCE,
         TIRED_SOURCE,
@@ -406,6 +422,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           thinkingExpression,
           closedEyes,
           alternateNeutral,
+          secondaryNeutral,
           sleeping,
           huff,
           tired,
@@ -417,6 +434,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
             thinkingExpression,
             closedEyes,
             alternateNeutral,
+            secondaryNeutral,
             sleeping,
             huff,
             tired,
