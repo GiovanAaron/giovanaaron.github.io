@@ -26,7 +26,7 @@ export function PortfolioHeroImage() {
           <div className="absolute inset-0 backface-hidden">
             <Image
               src="/assets/tall-hero.png"
-              alt="John Smith, creative UI/UX designer"
+              alt="Giovan Aaron Full-Stack Developer"
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 48vw"
