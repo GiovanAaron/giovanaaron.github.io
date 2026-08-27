@@ -8,45 +8,49 @@ import {
   AVATAR_THINKING_EVENT,
 } from "@/lib/avatar-state";
 
-const AVATAR_SOURCE = "/assets/alphaver/new-me-red.svg";
-const EXPRESSION_SOURCE = "/assets/alphaver/me-red-animated.svg";
-const THINKING_SOURCE = "/assets/alphaver/me-red-animated-thinking.svg";
-const THINKING_EXPRESSION_SOURCE =
-  "/assets/alphaver/me-red-thinking-expression.svg";
-const CLOSED_EYES_SOURCE =
-  "/assets/alphaver/me-red-thinking-eyes-closed.svg";
-const ALTERNATE_NEUTRAL_SOURCE =
-  "/assets/alphaver/me-red-neutral-expression-warm.svg";
-const SECONDARY_NEUTRAL_SOURCE =
-  "/assets/alphaver/me-red-neutral-expression-warm-2.svg";
-const SLEEPING_SOURCE = "/assets/alphaver/me-red-sleeping.svg";
-const HUFF_SOURCE = "/assets/alphaver/me-red-huff.svg";
-const TIRED_SOURCE = "/assets/alphaver/me-red-tired-expression.svg";
-const HUFF_RECOIL_SOURCE = "/assets/alphaver/me-red-huff-recoil.svg";
-const EYEROLL_SOURCE = "/assets/alphaver/me-red-eyeroll-expression.svg";
-const TSHIRT_LOGO_SOURCE =
-  "/assets/alphaver/me-red-thinking-expression-t-shirt-logo-reference.svg";
+const AVATAR_ASSETS = {
+  base: "/assets/gio_mini/gio_mini.svg",
+  smile: "/assets/gio_mini/gio_mini-animated.svg",
+  thinkingPosture: "/assets/gio_mini/gio_mini-animated-thinking.svg",
+  thinkingExpression: "/assets/gio_mini/gio_mini-thinking-expression.svg",
+  closedEyes: "/assets/gio_mini/gio_mini-thinking-eyes-closed.svg",
+  warmNeutral: "/assets/gio_mini/gio_mini-neutral-expression-warm.svg",
+  secondaryNeutral:
+    "/assets/gio_mini/gio_mini-neutral-expression-warm-2.svg",
+  sleeping: "/assets/gio_mini/gio_mini-sleeping.svg",
+  huff: "/assets/gio_mini/gio_mini-huff.svg",
+  tired: "/assets/gio_mini/gio_mini-tired-expression.svg",
+  huffRecoil: "/assets/gio_mini/gio_mini-huff-recoil.svg",
+  eyeRoll: "/assets/gio_mini/gio_mini-eyeroll-expression.svg",
+  tshirtLogo:
+    "/assets/gio_mini/gio_mini-thinking-expression-t-shirt-logo-reference.svg",
+} as const;
+
+type AvatarAssetName = keyof typeof AVATAR_ASSETS;
+type AvatarDocuments = Record<AvatarAssetName, Document>;
+
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const BREATHS_BEFORE_SMILE = { min: 4, max: 6 };
 const THINKING_EXPRESSION_PATHS = [
-  "neutral-glasses-fill",
-  "neutral-left-pupil",
-  "neutral-moustach-mouth",
-  "neutral-right-eye-lid",
-  "neutral-right-pupil",
+  "glasses-fill",
+  "left-pupil",
+  "moustach-mouth",
+  "right-eyebrow",
+  "right-pupil",
 ];
-const BLINK_PATHS = ["neutral-left-pupil", "neutral-right-pupil"];
+const BLINK_PATHS = ["left-pupil", "right-pupil"];
 const HUFF_PATHS = [
-  "neutral-eyebrow",
-  "neutral-left-pupil",
-  "neutral-right-pupil",
+  "left-eyebrow",
+  "left-pupil",
+  "right-pupil",
 ];
 const TIRED_PATHS = [
-  "neutral-chin-crease",
-  "neutral-right-pupil",
-  "neutral-left-pupil",
-  "neutral-chingoatee",
-  "neutral-moustach-mouth",
-  "neutral-nose",
+  "chin-crease",
+  "right-pupil",
+  "left-pupil",
+  "chin-goatee",
+  "moustach-mouth",
+  "nose",
 ];
 
 function randomBetween(min: number, max: number) {
@@ -90,96 +94,75 @@ function rotateSimplePath(
   return transformed.join(" ");
 }
 
-function translateSimplePath(path: string, deltaX: number, deltaY: number) {
+function translatePath(path: string, deltaX: number, deltaY: number) {
   const tokens = path.match(/[A-Za-z]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? [];
   const transformed: string[] = [];
+  const parameterCounts: Record<string, number> = {
+    A: 7,
+    C: 6,
+    H: 1,
+    L: 2,
+    M: 2,
+    Q: 4,
+    S: 4,
+    T: 2,
+    V: 1,
+  };
+  let command = "";
+  let parameterIndex = 0;
 
-  for (let index = 0; index < tokens.length; index += 1) {
-    const token = tokens[index];
+  tokens.forEach((token) => {
     if (/^[A-Za-z]$/.test(token)) {
+      command = token;
+      parameterIndex = 0;
       transformed.push(token);
-      continue;
+      return;
     }
 
-    const nextToken = tokens[index + 1];
-    if (!nextToken || /^[A-Za-z]$/.test(nextToken)) return path;
-    transformed.push(
-      String(Number((Number(token) + deltaX).toFixed(3))),
-      String(Number((Number(nextToken) + deltaY).toFixed(3))),
-    );
-    index += 1;
-  }
+    const upperCommand = command.toUpperCase();
+    const parameterCount = parameterCounts[upperCommand];
+    const position = parameterCount ? parameterIndex % parameterCount : 0;
+    let value = Number(token);
+
+    // Relative commands already describe offsets, so only absolute command
+    // coordinates need to move. Arc radii/flags/rotation are also untouched.
+    if (command === upperCommand) {
+      if (upperCommand === "H" || upperCommand === "M" || upperCommand === "L" || upperCommand === "T") {
+        value += position % 2 === 0 ? deltaX : deltaY;
+      } else if (upperCommand === "V") {
+        value += deltaY;
+      } else if (["C", "Q", "S"].includes(upperCommand)) {
+        value += position % 2 === 0 ? deltaX : deltaY;
+      } else if (upperCommand === "A") {
+        if (position === 5) value += deltaX;
+        if (position === 6) value += deltaY;
+      }
+    }
+
+    transformed.push(String(Number(value.toFixed(3))));
+    parameterIndex += 1;
+  });
 
   return transformed.join(" ");
 }
 
-function prepareInlineSvg(
-  source: string,
-  expressionSource: string,
-  thinkingSource: string,
-  thinkingExpressionSource: string,
-  closedEyesSource: string,
-  alternateNeutralSource: string,
-  secondaryNeutralSource: string,
-  sleepingSource: string,
-  huffSource: string,
-  tiredSource: string,
-  huffRecoilSource: string,
-  eyeRollSource: string,
-  tshirtLogoSource: string,
-) {
-  const document = new DOMParser().parseFromString(source, "image/svg+xml");
-  const expressionDocument = new DOMParser().parseFromString(
-    expressionSource,
-    "image/svg+xml",
-  );
-  const thinkingDocument = new DOMParser().parseFromString(
-    thinkingSource,
-    "image/svg+xml",
-  );
-  const thinkingExpressionDocument = new DOMParser().parseFromString(
-    thinkingExpressionSource,
-    "image/svg+xml",
-  );
-  const closedEyesDocument = new DOMParser().parseFromString(
-    closedEyesSource,
-    "image/svg+xml",
-  );
-  const alternateNeutralDocument = new DOMParser().parseFromString(
-    alternateNeutralSource,
-    "image/svg+xml",
-  );
-  const secondaryNeutralDocument = new DOMParser().parseFromString(
-    secondaryNeutralSource,
-    "image/svg+xml",
-  );
-  const sleepingDocument = new DOMParser().parseFromString(
-    sleepingSource,
-    "image/svg+xml",
-  );
-  const huffDocument = new DOMParser().parseFromString(
-    huffSource,
-    "image/svg+xml",
-  );
-  const tiredDocument = new DOMParser().parseFromString(
-    tiredSource,
-    "image/svg+xml",
-  );
-  const huffRecoilDocument = new DOMParser().parseFromString(
-    huffRecoilSource,
-    "image/svg+xml",
-  );
-  const eyeRollDocument = new DOMParser().parseFromString(
-    eyeRollSource,
-    "image/svg+xml",
-  );
-  const tshirtLogoDocument = new DOMParser().parseFromString(
-    tshirtLogoSource,
-    "image/svg+xml",
-  );
+function prepareInlineSvg(documents: AvatarDocuments) {
+  const document = documents.base;
+  const expressionDocument = documents.smile;
+  const thinkingDocument = documents.thinkingPosture;
+  const thinkingExpressionDocument = documents.thinkingExpression;
+  const closedEyesDocument = documents.closedEyes;
+  const alternateNeutralDocument = documents.warmNeutral;
+  const secondaryNeutralDocument = documents.secondaryNeutral;
+  const sleepingDocument = documents.sleeping;
+  const huffDocument = documents.huff;
+  const tiredDocument = documents.tired;
+  const huffRecoilDocument = documents.huffRecoil;
+  const eyeRollDocument = documents.eyeRoll;
+  const tshirtLogoDocument = documents.tshirtLogo;
   const svg = document.documentElement;
 
-  const neutralBody = svg.querySelector("#neutral-body");
+  const neutralBody = svg.querySelector("#body");
   const referenceLogo = tshirtLogoDocument.querySelector(
     "#GioAi-tshirt-logo",
   );
@@ -189,7 +172,7 @@ function prepareInlineSvg(
     neutralBody.appendChild(logo);
   }
 
-  ["neutral-eyebrow", "neutral-right-eye-lid"].forEach((id) => {
+  ["left-eyebrow", "right-eyebrow"].forEach((id) => {
     const targetPath = svg.querySelector(`#${id}`);
     const recoilPath = huffRecoilDocument.querySelector(`#${id}`);
     const bakedPathData = recoilPath?.getAttribute("d");
@@ -199,7 +182,7 @@ function prepareInlineSvg(
     overlay.id = `huff-recoil-${id}`;
     overlay.setAttribute(
       "d",
-      translateSimplePath(bakedPathData, -38, -39),
+      translatePath(bakedPathData, -38, -39),
     );
     overlay.setAttribute("opacity", "0");
     targetPath.parentNode.insertBefore(overlay, targetPath.nextSibling);
@@ -207,7 +190,7 @@ function prepareInlineSvg(
 
   // Warm 2 is the underlying neutral pose; the resting cycle spends most of
   // its time in the primary warm expression and occasionally returns here.
-  ["neutral-right-eye-lid", "neutral-moustach-mouth"].forEach((id) => {
+  ["right-eyebrow", "moustach-mouth"].forEach((id) => {
     const targetPath = svg.querySelector(`#${id}`);
     const secondaryPath = secondaryNeutralDocument.querySelector(`#${id}`);
     const pathData = secondaryPath?.getAttribute("d");
@@ -219,13 +202,17 @@ function prepareInlineSvg(
   const importPathAnimations = (
     sourceDocument: Document,
     selector: string,
+    sourcePrefix = "",
   ) => {
     sourceDocument
       .querySelectorAll<SVGAnimateElement>(selector)
       .forEach((sourceAnimation) => {
         const sourcePath = sourceAnimation.parentElement;
-        const targetPath = sourcePath?.id
-          ? svg.querySelector(`#${sourcePath.id}`)
+        const targetId = sourcePath?.id.startsWith(sourcePrefix)
+          ? sourcePath.id.slice(sourcePrefix.length)
+          : sourcePath?.id;
+        const targetPath = targetId
+          ? svg.querySelector(`#${targetId}`)
           : null;
         if (targetPath) {
           const animation = document.importNode(sourceAnimation, true);
@@ -246,6 +233,7 @@ function prepareInlineSvg(
   importPathAnimations(
     expressionDocument,
     "#animated-avatar-neutral animate[attributeName='d']",
+    "neutral-",
   );
 
   THINKING_EXPRESSION_PATHS.forEach((id) => {
@@ -259,7 +247,7 @@ function prepareInlineSvg(
 
     // The edited eyelid replaces two horizontal commands with equivalent
     // line commands. Normalize the neutral path so SMIL can interpolate it.
-    if (id === "neutral-right-eye-lid") {
+    if (id === "right-eyebrow") {
       neutralPath = neutralPath
         .replace("H212.271", "L212.271 261.965")
         .replace("H261.871", "L261.871 255.565");
@@ -267,7 +255,7 @@ function prepareInlineSvg(
     }
 
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -284,7 +272,7 @@ function prepareInlineSvg(
     if (!targetPath || !openPathData || !closedPathData) return;
 
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -293,7 +281,7 @@ function prepareInlineSvg(
     targetPath.appendChild(animation);
 
     const wakeAnimation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     wakeAnimation.setAttribute("attributeName", "d");
@@ -302,16 +290,15 @@ function prepareInlineSvg(
     targetPath.appendChild(wakeAnimation);
   });
 
-  const restingEyelid = svg.querySelector("#neutral-right-eye-lid");
+  const restingEyelid = svg.querySelector("#right-eyebrow");
   const alternateRestingEyelid =
-    alternateNeutralDocument.querySelector("#neutral-right-eye-lid") ??
-    alternateNeutralDocument.querySelectorAll("path")[18];
+    alternateNeutralDocument.querySelector("#right-eyebrow");
   const restingEyelidPath = restingEyelid?.getAttribute("d");
   const alternateRestingEyelidPath =
     alternateRestingEyelid?.getAttribute("d");
   if (restingEyelid && restingEyelidPath && alternateRestingEyelidPath) {
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -323,15 +310,15 @@ function prepareInlineSvg(
     restingEyelid.appendChild(animation);
   }
 
-  const neutralMouth = svg.querySelector("#neutral-moustach-mouth");
+  const neutralMouth = svg.querySelector("#moustach-mouth");
   const warmMouth = alternateNeutralDocument.querySelector(
-    "#neutral-moustach-mouth",
+    "#moustach-mouth",
   );
   const warmMouthPath = warmMouth?.getAttribute("d");
   const baseMouthPath = neutralMouth?.getAttribute("d");
   if (neutralMouth && baseMouthPath && warmMouthPath) {
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -340,9 +327,7 @@ function prepareInlineSvg(
     neutralMouth.appendChild(animation);
   }
 
-  const sleepingMouth =
-    sleepingDocument.querySelector("#neutral-moustach-mouth") ??
-    sleepingDocument.querySelectorAll("path")[22];
+  const sleepingMouth = sleepingDocument.querySelector("#moustach-mouth");
   const neutralMouthPath = neutralMouth?.getAttribute("d");
   const bakedSleepingMouthPath = sleepingMouth?.getAttribute("d");
   if (neutralMouth && neutralMouthPath && bakedSleepingMouthPath) {
@@ -353,7 +338,7 @@ function prepareInlineSvg(
       470.816,
     );
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -372,7 +357,7 @@ function prepareInlineSvg(
     const huffPathData = huffPath?.getAttribute("d");
     if (!targetPath || !neutralPath || !huffPathData) return;
 
-    if (id === "neutral-eyebrow") {
+    if (id === "left-eyebrow") {
       neutralPath = neutralPath.replace(
         "H169.899",
         "L169.899 260.974",
@@ -381,7 +366,7 @@ function prepareInlineSvg(
     }
 
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -398,7 +383,7 @@ function prepareInlineSvg(
     if (!targetPath || !neutralPath || !tiredPathData) return;
 
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -414,7 +399,7 @@ function prepareInlineSvg(
       ?.getAttribute("d");
     if (!eyeRollPathData) return;
     const eyeRollAnimation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     eyeRollAnimation.setAttribute("attributeName", "d");
@@ -434,13 +419,13 @@ function prepareInlineSvg(
     const neutralPath = targetPath?.getAttribute("d");
     if (!targetPath || !neutralPath || !bakedHuffRecoilPathData) return;
 
-    const huffRecoilPathData = translateSimplePath(
+    const huffRecoilPathData = translatePath(
       bakedHuffRecoilPathData,
       -38,
       -39,
     );
     const animation = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "animate",
     );
     animation.setAttribute("attributeName", "d");
@@ -450,7 +435,7 @@ function prepareInlineSvg(
   });
   importPathAnimations(
     thinkingDocument,
-    "#neutral-upper-arm-outline > animate[attributeName='d']",
+    "#upper-arm-outline > animate[attributeName='d']",
   );
 
   svg.querySelectorAll("animate").forEach((animation) => {
@@ -471,10 +456,10 @@ function prepareInlineSvg(
   // The new artwork splits the upper arm and hand/forearm into separate
   // branches. Wrapping their shared parent keeps every branch attached during
   // breathing without imposing a second transform on either arm segment.
-  const neutral = svg.querySelector("#animated-avatar-neutral");
+  const neutral = svg.querySelector("#base-avatar");
   if (neutral?.parentNode) {
     const breath = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "g",
     );
     breath.id = "animated-avatar-breath";
@@ -483,19 +468,22 @@ function prepareInlineSvg(
   }
 
   const headNodes = [
-    "neutral-head",
-    "neutral-expression-suspicious-d362b6de",
-    "neutral-Face",
-    "neutral-glasses",
+    "head",
+    "chin-crease",
+    "right-eye",
+    "left-eye",
+    "left-eyebrow",
+    "face",
+    "glasses",
   ]
     .map((id) => svg.querySelector(`#${id}`))
     .filter((node): node is Element => Boolean(node));
   const firstHeadNode = headNodes[0];
-  if (firstHeadNode?.parentNode && headNodes.length === 4) {
-    const sway = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    const tilt = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  if (firstHeadNode?.parentNode && headNodes.length === 7) {
+    const sway = document.createElementNS(SVG_NAMESPACE, "g");
+    const tilt = document.createElementNS(SVG_NAMESPACE, "g");
     const sleepMotion = document.createElementNS(
-      "http://www.w3.org/2000/svg",
+      SVG_NAMESPACE,
       "g",
     );
     sway.id = "animated-avatar-head-sway";
@@ -516,68 +504,25 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
   useEffect(() => {
     const controller = new AbortController();
+    const parser = new DOMParser();
 
     Promise.all(
-      [
-        AVATAR_SOURCE,
-        EXPRESSION_SOURCE,
-        THINKING_SOURCE,
-        THINKING_EXPRESSION_SOURCE,
-        CLOSED_EYES_SOURCE,
-        ALTERNATE_NEUTRAL_SOURCE,
-        SECONDARY_NEUTRAL_SOURCE,
-        SLEEPING_SOURCE,
-        HUFF_SOURCE,
-        TIRED_SOURCE,
-        HUFF_RECOIL_SOURCE,
-        EYEROLL_SOURCE,
-        TSHIRT_LOGO_SOURCE,
-      ].map(async (source) => {
+      Object.entries(AVATAR_ASSETS).map(async ([name, source]) => {
         const response = await fetch(source, { signal: controller.signal });
         if (!response.ok) {
-          // The legacy wake-up huff is optional. Keeping its empty document in
-          // the argument slot lets the avatar render when that asset is removed.
-          if (source === HUFF_SOURCE && response.status === 404) {
-            return "<svg xmlns=\"http://www.w3.org/2000/svg\" />";
-          }
           throw new Error(
             `Could not load the animated avatar asset: ${source} (${response.status})`,
           );
         }
-        return response.text();
+        const markup = await response.text();
+        return [
+          name as AvatarAssetName,
+          parser.parseFromString(markup, "image/svg+xml"),
+        ] as const;
       }),
     )
-      .then(
-        ([
-          avatar,
-          expressions,
-          thinking,
-          thinkingExpression,
-          closedEyes,
-          alternateNeutral,
-          secondaryNeutral,
-          sleeping,
-          huff,
-          tired,
-          huffRecoil,
-          eyeRoll,
-          tshirtLogo,
-        ]) =>
-          prepareInlineSvg(
-            avatar,
-            expressions,
-            thinking,
-            thinkingExpression,
-            closedEyes,
-            alternateNeutral,
-            secondaryNeutral,
-            sleeping,
-            huff,
-            tired,
-            huffRecoil,
-            eyeRoll,
-            tshirtLogo,
-          ),
+      .then((entries) =>
+        prepareInlineSvg(Object.fromEntries(entries) as AvatarDocuments),
       )
       .then(setMarkup)
       .catch((error: unknown) => {
@@ -594,13 +539,13 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     if (!host || !markup) return;
 
     const breath = host.querySelector<SVGGElement>("#animated-avatar-breath");
-    const neutral = host.querySelector<SVGGElement>("#animated-avatar-neutral");
+    const neutral = host.querySelector<SVGGElement>("#base-avatar");
     const smile = host.querySelector<SVGGElement>("#animated-avatar-smile");
     const morphAnimations = host.querySelectorAll<SVGAnimateElement>(
-      "#neutral-eyebrow > animate[attributeName='d'], #neutral-moustach-mouth > animate[attributeName='d']",
+      "#left-eyebrow > animate[attributeName='d'], #moustach-mouth > animate[attributeName='d']",
     );
     const armMorphAnimation = host.querySelector<SVGAnimateElement>(
-      "#neutral-upper-arm-outline > animate[attributeName='d']",
+      "#upper-arm-outline > animate[attributeName='d']",
     );
     const thinkingExpressionAnimations = host.querySelectorAll<SVGAnimateElement>(
       "animate[data-avatar-animation='thinking-expression']",
@@ -615,10 +560,10 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       "animate[data-avatar-animation='resting-expression']",
     );
     const restingEyelidAnimation = host.querySelector<SVGAnimateElement>(
-      "#neutral-right-eye-lid > animate[data-avatar-animation='resting-expression']",
+      "#right-eyebrow > animate[data-avatar-animation='resting-expression']",
     );
     const restingMouthAnimation = host.querySelector<SVGAnimateElement>(
-      "#neutral-moustach-mouth > animate[data-avatar-animation='resting-expression']",
+      "#moustach-mouth > animate[data-avatar-animation='resting-expression']",
     );
     const sleepingMouthAnimation = host.querySelector<SVGAnimateElement>(
       "animate[data-avatar-animation='sleeping-mouth']",
@@ -633,19 +578,19 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       "animate[data-avatar-animation='huff-recoil-expression']",
     );
     const huffRecoilDetailPaths = host.querySelectorAll<SVGPathElement>(
-      "#huff-recoil-neutral-eyebrow, #huff-recoil-neutral-right-eye-lid",
+      "#huff-recoil-left-eyebrow, #huff-recoil-right-eyebrow",
     );
     const neutralRecoilDetailPaths = host.querySelectorAll<SVGPathElement>(
-      "#neutral-eyebrow, #neutral-right-eye-lid",
+      "#left-eyebrow, #right-eyebrow",
     );
     const eyeRollAnimations = host.querySelectorAll<SVGAnimateElement>(
       "animate[data-avatar-animation='eyeroll-expression']",
     );
     const thinkingArm = host.querySelector<SVGGElement>(
-      "#neutral-right-hand-and-forearm",
+      "#right-hand-and-forearm",
     );
     const thinkingElbow = host.querySelector<SVGGElement>(
-      "#neutral-elbow-anchor",
+      "#elbow-joint",
     );
     const thinkingHead = host.querySelector<SVGGElement>(
       "#animated-avatar-head-tilt",
@@ -654,10 +599,10 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
       "#animated-avatar-sleep-motion",
     );
     const sleepingGlasses = host.querySelector<SVGGElement>(
-      "#neutral-glasses",
+      "#glasses",
     );
     const eyeGroups = host.querySelectorAll<SVGGElement>(
-      "#neutral-left-eye, #neutral-right-eye, #smile-left-eye, #smile-right-eye",
+      "#left-eye, #right-eye, #smile-left-eye, #smile-right-eye",
     );
     const headParts = host.querySelectorAll<SVGGElement>(
       "#animated-avatar-head-sway",
@@ -771,7 +716,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
         if (
           alternateEyelidActive &&
-          animation.parentElement?.id === "neutral-moustach-mouth"
+          animation.parentElement?.id === "moustach-mouth"
         ) {
           neutralPath =
             restingMouthAnimation?.dataset.originalValues?.split(";")[1] ??
@@ -801,7 +746,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
     if (thinkingElbow) {
       thinkingElbow.style.transformBox = "view-box";
       thinkingElbow.style.transformOrigin = "486.739px 652.787px";
-      thinkingElbow.style.transform = "translate(-10px, -33px)";
+      thinkingElbow.style.transform = "translate(0, 0)";
     }
 
     const setThinkingPosture = (isThinking: boolean) => {
@@ -831,7 +776,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
 
         let startPath = isThinking ? neutralPath : thinkingPath;
         let endPath = isThinking ? thinkingPath : neutralPath;
-        if (animation.parentElement?.id === "neutral-right-eye-lid") {
+        if (animation.parentElement?.id === "right-eyebrow") {
           const alternatePath =
             restingEyelidAnimation?.getAttribute("values")?.split(";")[1];
           if (alternateEyelidActive && alternatePath) {
@@ -840,7 +785,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
           }
         } else if (
           alternateEyelidActive &&
-          animation.parentElement?.id === "neutral-moustach-mouth"
+          animation.parentElement?.id === "moustach-mouth"
         ) {
           const warmPath =
             restingMouthAnimation?.dataset.originalValues?.split(";")[1] ??
@@ -853,7 +798,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         if (
           isThinking &&
           smiling &&
-          animation.parentElement?.id === "neutral-moustach-mouth"
+          animation.parentElement?.id === "moustach-mouth"
         ) {
           const smileAnimation = animation.parentElement.querySelector<SVGAnimateElement>(
             "animate:not([data-avatar-animation])",
@@ -960,29 +905,29 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         isThinking
           ? [
               {
-                transform: "translate(-10px, -33px)",
+                transform: "translate(0, 0)",
                 offset: 0,
                 easing: "cubic-bezier(.22, .61, .36, 1)",
               },
               {
-                transform: "translate(0.35px, 0.7px)",
+                transform: "translate(10.35px, 33.7px)",
                 offset: 0.9,
                 easing: "ease-out",
               },
-              { transform: "translate(0, 0)", offset: 1 },
+              { transform: "translate(10px, 33px)", offset: 1 },
             ]
           : [
               {
-                transform: "translate(0, 0)",
+                transform: "translate(10px, 33px)",
                 offset: 0,
                 easing: "cubic-bezier(.45, 0, .25, 1)",
               },
               {
-                transform: "translate(-10.2px, -33.5px)",
+                transform: "translate(-0.2px, -0.5px)",
                 offset: 0.92,
                 easing: "ease-out",
               },
-              { transform: "translate(-10px, -33px)", offset: 1 },
+              { transform: "translate(0, 0)", offset: 1 },
             ],
         {
           duration: postureDuration,
@@ -1232,7 +1177,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         }
         eyeRollAnimations.forEach((animation) => {
           const id = animation.parentElement?.id;
-          if (id?.includes("pupil") || id === "neutral-moustach-mouth") return;
+          if (id?.includes("pupil") || id === "moustach-mouth") return;
           const [neutralPath, eyeRollPath] =
             animation.dataset.originalValues?.split(";") ?? [];
           if (!neutralPath || !eyeRollPath) return;
@@ -1296,7 +1241,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
         if (neutralMouthPath && sleepingMouthPath) {
           const eyeRollMouth = Array.from(eyeRollAnimations).find(
             (animation) =>
-              animation.parentElement?.id === "neutral-moustach-mouth",
+              animation.parentElement?.id === "moustach-mouth",
           );
           const startingMouthPath =
             eyeRollMouth?.dataset.originalValues?.split(";")[1] ??
@@ -1673,7 +1618,7 @@ export function AnimatedAvatar({ className = "" }: { className?: string }) {
                 animation.dataset.originalValues?.split(";") ?? [];
               if (!neutralPath || !eyeRollPath) return;
               const warmMouthPath =
-                animation.parentElement?.id === "neutral-moustach-mouth" &&
+                animation.parentElement?.id === "moustach-mouth" &&
                 alternateEyelidActive
                   ? restingMouthAnimation?.dataset.originalValues?.split(
                       ";",

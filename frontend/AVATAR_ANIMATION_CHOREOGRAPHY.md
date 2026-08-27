@@ -55,7 +55,7 @@ The head continuously follows an 18-second loop:
 
 ### Pointer gaze
 
-`neutral-left-eye`, `neutral-right-eye`, `smile-left-eye`, and
+`left-eye`, `right-eye`, `smile-left-eye`, and
 `smile-right-eye` follow the pointer.
 
 - Maximum gaze translation: approximately `7px` horizontally and `5px`
@@ -66,13 +66,13 @@ The head continuously follows an 18-second loop:
 
 ### Warm-neutral alternation
 
-The resting expression alternates both `neutral-right-eye-lid` and
-`neutral-moustach-mouth` together.
+The resting expression alternates both `right-eyebrow` and
+`moustach-mouth` together.
 
 - Primary state, approximately 75% of resting time:
-  `me-red-neutral-expression-warm.svg`.
+  `gio_mini-neutral-expression-warm.svg`.
 - Secondary state, approximately 25%:
-  `me-red-neutral-expression-warm-2.svg`.
+  `gio_mini-neutral-expression-warm-2.svg`.
 - Morph duration: `900 ms`.
 - Primary-warm dwell: random `9–15 s`.
 - Warm-2 dwell: random `3–5 s`.
@@ -115,18 +115,18 @@ after `7 s`; after `setAnswer(...)`, the event is dispatched with `false`.
 The following happen together:
 
 - Thinking facial paths morph into their authored shapes:
-  - `neutral-glasses-fill`
-  - `neutral-left-pupil`
-  - `neutral-moustach-mouth`
-  - `neutral-right-eye-lid`
-  - `neutral-right-pupil`
-- `neutral-right-hand-and-forearm` rotates from `0°` past `127°`, then settles
+  - `glasses-fill`
+  - `left-pupil`
+  - `moustach-mouth`
+  - `right-eyebrow`
+  - `right-pupil`
+- `right-hand-and-forearm` rotates from `0°` past `127°`, then settles
   at `125.869°`.
-- `neutral-elbow-anchor` moves from `translate(-10px, -33px)`, slightly
-  overshoots, then settles at `translate(0, 0)`.
+- `elbow-joint` starts from the neutral geometry baked into `gio_mini.svg`,
+  slightly overshoots, then settles at `translate(10px, 33px)`.
 - The head rotates past `11.18°`, then settles at `10.983°` around
   `(201.224, 270.292)`.
-- `neutral-upper-arm-outline` morphs into the thinking-arm path.
+- `upper-arm-outline` morphs into the thinking-arm path.
 - Entry uses a quick glide with a restrained overshoot near 90% progress.
 
 ### Thinking hand fidget
@@ -158,11 +158,11 @@ Selecting dark mode dispatches `portfolio-avatar-sleeping`.
 
 | Cumulative time | Phase | Duration | Choreography |
 |---:|---|---:|---|
-| `0–440 ms` | Eye-roll lead-in | `440 ms` | Face enters `me-red-eyeroll-expression.svg`; head quickly lifts/tilts into the lead-in pose. |
-| `440–1090 ms` | Enter sleep | `650 ms` | Head rotates to `-19.237°` around `(331.414, 470.816)`; eyes morph fully closed; mouth morphs to `me-red-sleeping.svg`; glasses move to their sleep offset. |
+| `0–440 ms` | Eye-roll lead-in | `440 ms` | Face enters `gio_mini-eyeroll-expression.svg`; head quickly lifts/tilts into the lead-in pose. |
+| `440–1090 ms` | Enter sleep | `650 ms` | Head rotates to `-19.237°` around `(331.414, 470.816)`; eyes morph fully closed; mouth morphs to `gio_mini-sleeping.svg`; glasses move to their sleep offset. |
 | `1090–4090 ms` | Snore | `3 s` | Four `750 ms` snore cycles subtly move, rotate, and scale the sleeping head. Eyes remain closed. |
 | `4090–4990 ms` | Wake flutter | `900 ms` | A dedicated wake-blink layer performs four rapid blinks and ends closed. |
-| `4990–5640 ms` | Sleep to huff | `650 ms` | Head and glasses return; mouth returns toward warm neutral; pupils/eyebrow enter `me-red-huff.svg`. |
+| `4990–5640 ms` | Sleep to huff | `650 ms` | Head and glasses return; mouth returns toward warm neutral; pupils/eyebrow enter `gio_mini-huff.svg`. |
 | `5640–6140 ms` | Huff hold | `500 ms` | Huff expression vibrates in five aggressive `100 ms` shake cycles. |
 | `6140–6640 ms` | Huff to neutral | `500 ms` | Huff paths morph back to neutral. |
 | `6640–6660 ms` | Cleanup | `20 ms` | Transient SMIL layers complete their two-phase reset; normal scheduling resumes. |
@@ -170,7 +170,7 @@ Selecting dark mode dispatches `portfolio-avatar-sleeping`.
 ### Sleep-specific transforms
 
 - Complete head sleep rotation: `-19.237°`.
-- `neutral-glasses` receives an additional local sleep offset of approximately
+- `glasses` receives an additional local sleep offset of approximately
   `translate(-15.976px, 12.386px)` and returns during huff.
 - Snore movement per cycle reaches approximately:
   - `translateY(1.4px)`
@@ -189,9 +189,9 @@ Selecting light mode dispatches `portfolio-avatar-light-reaction`.
 
 | Cumulative time | Phase | Duration | Choreography |
 |---:|---|---:|---|
-| `0–360 ms` | Light recoil | `360 ms` | Face enters `me-red-huff-recoil.svg`; the complete head moves exactly `38px` right and `39px` down. |
+| `0–360 ms` | Light recoil | `360 ms` | Face enters `gio_mini-huff-recoil.svg`; the complete head moves exactly `38px` right and `39px` down. |
 | `360–1000 ms` | Blinded flutter | `640 ms` | Four rapid blinks alternate between recoil pupils and closed-eye paths. |
-| `1000–1420 ms` | Recoil to eye-roll | `420 ms` | Face morphs into `me-red-eyeroll-expression.svg`; head releases the recoil translation; recoil eyebrow/eyelid details return to their neutral layers. |
+| `1000–1420 ms` | Recoil to eye-roll | `420 ms` | Face morphs into `gio_mini-eyeroll-expression.svg`; head releases the recoil translation; recoil eyebrow/eyelid details return to their neutral layers. |
 | `1420–2120 ms` | Eye-roll hold | `700 ms` | Eye-roll is held briefly. |
 | `2120–2770 ms` | Return to neutral | `650 ms` | Eye-roll morphs into the currently active warm-neutral pose. |
 | `2770–2790 ms` | Cleanup | `20 ms` | Transient SMIL layers complete their two-phase reset; normal scheduling resumes. |
@@ -201,63 +201,64 @@ Selecting light mode dispatches `portfolio-avatar-light-reaction`.
 - Recoil facial paths are normalized by `(-38px, -39px)` before morphing so
   the group-level head translation is not applied twice.
 - Morph-compatible recoil paths:
-  - `neutral-chin-crease`
-  - `neutral-right-pupil`
-  - `neutral-left-pupil`
-  - `neutral-chingoatee`
-  - `neutral-moustach-mouth`
-  - `neutral-nose`
+  - `chin-crease`
+  - `right-pupil`
+  - `left-pupil`
+  - `chin-goatee`
+  - `moustach-mouth`
+  - `nose`
 - The recoil eyebrow and right eyelid use isolated authored overlay paths
   because their path topology is not safely shared with every other state.
 
 ## Current SVG sources
 
-The current alpha-version assets are archived under `public/assets/alphaver/`.
+The active refactored assets live under `public/assets/gio_mini/`. The original
+alpha-version assets remain archived under `public/assets/alphaver/`.
 
 | Purpose | Asset |
 |---|---|
-| Base avatar | `new-me-red.svg` |
-| Smile | `me-red-animated.svg` |
-| Thinking arm/posture | `me-red-animated-thinking.svg` |
-| Thinking face | `me-red-thinking-expression.svg` |
-| Closed eyes | `me-red-thinking-eyes-closed.svg` |
-| Primary warm neutral | `me-red-neutral-expression-warm.svg` |
-| Secondary warm neutral | `me-red-neutral-expression-warm-2.svg` |
-| Sleeping | `me-red-sleeping.svg` |
-| Huff | `me-red-huff.svg` |
-| Light recoil | `me-red-huff-recoil.svg` |
-| Eye-roll | `me-red-eyeroll-expression.svg` |
-| Tired expression (still loaded) | `me-red-tired-expression.svg` |
-| T-shirt logo reference | `me-red-thinking-expression-t-shirt-logo-reference.svg` |
+| Base avatar | `gio_mini.svg` |
+| Smile | `gio_mini-animated.svg` |
+| Thinking arm/posture | `gio_mini-animated-thinking.svg` |
+| Thinking face | `gio_mini-thinking-expression.svg` |
+| Closed eyes | `gio_mini-thinking-eyes-closed.svg` |
+| Primary warm neutral | `gio_mini-neutral-expression-warm.svg` |
+| Secondary warm neutral | `gio_mini-neutral-expression-warm-2.svg` |
+| Sleeping | `gio_mini-sleeping.svg` |
+| Huff | `gio_mini-huff.svg` |
+| Light recoil | `gio_mini-huff-recoil.svg` |
+| Eye-roll | `gio_mini-eyeroll-expression.svg` |
+| Tired expression (still loaded) | `gio_mini-tired-expression.svg` |
+| T-shirt logo reference | `gio_mini-thinking-expression-t-shirt-logo-reference.svg` |
 
 ## IDs currently relied on by choreography
 
 ### Structural groups
 
-- `animated-avatar-neutral`
-- `neutral-elbow-anchor`
-- `neutral-body`
-- `neutral-right-hand-and-forearm`
-- `neutral-upper-arm-outline`
-- `neutral-head`
-- `neutral-expression-suspicious-d362b6de`
-- `neutral-Face` — note the uppercase `F`
-- `neutral-glasses`
-- `neutral-left-eye`
-- `neutral-right-eye`
+- `base-avatar`
+- `elbow-joint`
+- `body`
+- `right-hand-and-forearm`
+- `upper-arm-outline`
+- `head`
+- `chin-crease`, `right-eye`, `left-eye`, and `left-eyebrow`
+- `face`
+- `glasses`
+- `left-eye`
+- `right-eye`
 
 ### Facial paths
 
-- `neutral-eyebrow`
-- `neutral-chin-crease`
-- `neutral-right-eye-lid`
-- `neutral-right-pupil`
-- `neutral-left-pupil`
-- `neutral-chingoatee`
-- `neutral-moustach-mouth`
-- `neutral-nose`
-- `neutral-glasses-fill`
-- `neutral-glasses-outline`
+- `left-eyebrow`
+- `chin-crease`
+- `right-eyebrow`
+- `right-pupil`
+- `left-pupil`
+- `chin-goatee`
+- `moustach-mouth`
+- `nose`
+- `glasses-fill`
+- `glasses-outline`
 
 ### Injected runtime wrappers and details
 
@@ -266,8 +267,8 @@ The current alpha-version assets are archived under `public/assets/alphaver/`.
 - `animated-avatar-head-tilt`
 - `animated-avatar-sleep-motion`
 - `GioAi-tshirt-logo`
-- `huff-recoil-neutral-eyebrow`
-- `huff-recoil-neutral-right-eye-lid`
+- `huff-recoil-left-eyebrow`
+- `huff-recoil-right-eyebrow`
 
 ## Path-structure constraints
 
@@ -280,7 +281,7 @@ are not sufficient. In particular:
 - Preserve subpath count and order.
 - Preserve compound-path winding and ordering for fills and masks.
 - Keep the same semantic element under the same parent group in every state.
-- Keep casing consistent; the current asset uses `neutral-Face`, not
+- Keep casing consistent; the current asset uses `face`, not
   `neutral-face`.
 - Prefer group transforms for rigid movement and path changes only for actual
   deformation. Baking the same rigid transform into every path makes state
