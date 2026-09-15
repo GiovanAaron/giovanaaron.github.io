@@ -107,7 +107,9 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-7">
               <a
-                href="#contact"
+                href="https://calendar.app.google/eE5FcZnghkSBCSpH8"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-primary text-primary-foreground inline-flex h-12 items-center gap-3 rounded-lg px-6 text-sm font-semibold shadow-sm transition-transform hover:-translate-y-0.5"
               >
                 Let&apos;s Work Together <ArrowUpRight className="size-4" />
