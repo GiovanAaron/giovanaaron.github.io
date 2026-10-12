@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import {
   ArrowUpRight,
   ChevronDown,
@@ -10,6 +12,15 @@ import {
 import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+
+import uclLogo from "@/assets/company_logos/ucl_logo.svg";
+import techReturnersLogo from "@/assets/company_logos/tech_returners_logo.svg";
+import techReturnersLightLogo from "@/assets/company_logos/tech_returners_logo_light.svg";
+import rendescoLogo from "@/assets/company_logos/rendesco_logo.svg";
+import rendescoDarkLogo from "@/assets/company_logos/rendesco_logo_dark.svg";
+import unifyGivingLogo from "@/assets/company_logos/unify_giving_logo.svg";
+import nhsLogo from "@/assets/company_logos/nhs_logo.svg";
+import nhirLogo from "@/assets/company_logos/nhir_logo.svg";
 
 function MetricCard({
   className = "",
@@ -38,8 +49,41 @@ function MetricCard({
   );
 }
 
+const companyLogos = [
+  { name: "UCL", src: uclLogo },
+  { name: "Tech Returners", src: techReturnersLogo, lightSrc: techReturnersLightLogo },
+  { name: "Rendesco", src: rendescoDarkLogo, lightSrc: rendescoLogo },
+  { name: "NHS", src: nhsLogo },
+  { name: "Unify Giving", src: unifyGivingLogo },
+  { name: "NHIR", src: nhirLogo },
+];
+
+const techStack = [
+  "JavaScript/TypeScript",
+  "React/React Native",
+  "Next.js",
+  "Python",
+  "Django",
+  "HTML/CSS",
+  "Node.js",
+  "PostgreSQL",
+  "MongoDB",
+  "Docker",
+  "FastAPI",
+  "AWS",
+  "Azure",
+  "Figma",
+];
+
+const techStackBackgrounds = [
+  "bg-[#795548]/15",
+  "bg-[#722F37]/15",
+  "bg-[#D4AF37]/15",
+];
+
 export default function Home() {
   return (
+    <>
     <main className="bg-background min-h-screen overflow-hidden">
       <header className="relative z-30 mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-14">
         <a
@@ -122,7 +166,7 @@ export default function Home() {
               >
                 Let&apos;s Work Together <ArrowUpRight className="size-4" />
               </a>
-              <div
+              {/* <div
                 className="flex items-center"
                 aria-label="More than one thousand happy clients"
               >
@@ -137,8 +181,18 @@ export default function Home() {
                 <span className="bg-card -ml-2 flex h-9 items-center rounded-full px-3 text-xs font-semibold shadow-sm">
                   +1K
                 </span>
-              </div>
+              </div> */}
             </div>
+            <ul aria-label="Tech stack" className="mt-6 flex flex-wrap gap-2">
+              {techStack.map((technology, index) => (
+                <li
+                  key={technology}
+                  className={`text-foreground inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${techStackBackgrounds[index % techStackBackgrounds.length]}`}
+                >
+                  {technology}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
@@ -191,24 +245,32 @@ export default function Home() {
           </div> */}
         </div>
       </section>
+      <PortfolioCommandMenu />
 
       <section
-        className="mx-auto w-full max-w-[1440px] px-5 pt-20 pb-12 text-center sm:px-8 lg:pt-24"
+        className="mx-auto w-full max-w-[1440px] px-5 pt-14 pb-12 text-center opacity-80 sm:px-8 lg:pt-0.5"
         id="products"
       >
-        <p className="text-muted-foreground text-sm">
-          Trusted by these great Companies
+        <p className="text-muted-foreground text-sm italic">
+          Trusted by These Great Companies
         </p>
-        <div className="text-muted-foreground mx-auto mt-8 flex max-w-5xl flex-wrap items-center justify-center gap-x-10 gap-y-6 text-lg font-semibold sm:text-xl">
-          <span>◇ UCL </span>
-          <span> TechReturners </span>
-          <span className="font-serif text-2xl">Rendesco</span>
-          <span>● Unify Giving</span>
-          <span>● reddit</span>
-          <span>♙ Medium</span>
-          <span className="bg-muted text-foreground rounded px-2 py-1 text-sm">
-            DEV
-          </span>
+        <div className="mx-auto mt-4 flex max-w-5xl flex-wrap items-center justify-center gap-x-8 gap-y-3">
+          {companyLogos.map((company) => (
+            <span key={company.name}>
+              {company.lightSrc && (
+                <Image
+                  src={company.lightSrc}
+                  alt={company.name}
+                  className="h-8 w-auto max-w-[120px] object-contain sm:h-10 dark:hidden"
+                />
+              )}
+              <Image
+                src={company.src}
+                alt={company.name}
+                className={`h-8 w-auto max-w-[120px] object-contain sm:h-10 ${company.lightSrc ? "hidden dark:block" : ""}`}
+              />
+            </span>
+          ))}
         </div>
       </section>
       <span id="about-us" className="sr-only">
@@ -220,7 +282,12 @@ export default function Home() {
       <span id="contact" className="sr-only">
         Contact
       </span>
-      <PortfolioCommandMenu />
     </main>
+    <footer className="bg-background text-muted-foreground px-5 text-center text-sm sm:px-8">
+      <div className="mx-auto max-w-[70%] border-t border-border/40 py-4 dark:border-white/15">
+        © 2026 Gio Automate Ltd. All rights reserved.
+      </div>
+    </footer>
+    </>
   );
 }
