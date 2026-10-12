@@ -11,8 +11,6 @@ import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const navItems = ["Home", "Products", "About Me", "Contacts"];
-
 function MetricCard({
   className = "",
   icon,
@@ -61,19 +59,29 @@ export default function Home() {
             className="hidden items-center gap-8 text-sm md:flex"
             aria-label="Main navigation"
           >
-            {navItems.map((item, index) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase().replaceAll(" ", "-")}`}
-                className={
-                  index === 0
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground transition-colors hover:text-foreground"
-                }
-              >
-                {item}
-              </a>
-            ))}
+            <a href="#home" className="text-foreground font-medium">
+              Home
+            </a>
+            <a
+              href="https://resisted-spoonbill-670.notion.site/Portfolio-bfa495d566854989923f98ff4c09b764"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Products
+            </a>
+            <a
+              href="#about-me"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              About Me
+            </a>
+            {/* <a
+              href="#contacts"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Contacts
+            </a> */}
           </nav>
           <ThemeToggle />
         </div>
