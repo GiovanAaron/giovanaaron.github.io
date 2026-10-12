@@ -8,27 +8,17 @@ import {
   triggerAvatarSleeping,
 } from "@/lib/avatar-state";
 
-const themeStorageKey = "portfolio-theme";
-
 export function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem(themeStorageKey);
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const shouldUseDark = savedTheme ? savedTheme === "dark" : prefersDark;
-
-    document.documentElement.classList.toggle("dark", shouldUseDark);
-    const frame = requestAnimationFrame(() => setIsDark(shouldUseDark));
-
-    return () => cancelAnimationFrame(frame);
+    document.documentElement.classList.remove("dark");
   }, []);
 
   function toggleTheme() {
     const nextIsDark = !isDark;
 
     document.documentElement.classList.toggle("dark", nextIsDark);
-    localStorage.setItem(themeStorageKey, nextIsDark ? "dark" : "light");
     setIsDark(nextIsDark);
     if (nextIsDark) triggerAvatarSleeping();
     else triggerAvatarLightReaction();
