@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Giovan Aaron - Portfolio",
   description: "Portfolio of Giovan Aaron, full-stack software developer.",
+  
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

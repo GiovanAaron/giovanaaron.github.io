@@ -89,7 +89,9 @@ export function PortfolioCommandMenu() {
   }
 
   return (
-    <div className="fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2
+    <div className="fixed bottom-11 left-1/2 z-50
+w-[calc(100%-2rem)] max-w-xl -translate-x-1/2
+lg:relative lg:bottom-auto lg:left-auto lg:mx-auto lg:mb-8 lg:mt-8 lg:translate-x-0
     "
     >
       {pendingQuestion !== null ? (
