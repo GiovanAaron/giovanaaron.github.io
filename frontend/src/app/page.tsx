@@ -12,6 +12,7 @@ import {
 import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Logo from "@/components/ui/logo"
 
 import uclLogo from "@/assets/company_logos/ucl_logo.svg";
 import techReturnersLogo from "@/assets/company_logos/tech_returners_logo.svg";
@@ -92,7 +93,7 @@ export default function Home() {
           aria-label="Studio home"
         >
           <span className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-full">
-            <Sparkles className="size-4" />
+            <Logo />
           </span>
           <span className="text-base font-semibold tracking-tight">
             Portfolio
