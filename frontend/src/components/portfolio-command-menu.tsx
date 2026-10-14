@@ -19,10 +19,12 @@ import { Button } from "@/components/ui/button";
 import { VisitorOnboarding } from "@/components/visitor-onboarding";
 import { useVisitor } from "@/components/visitor-provider";
 import { presetAnswers } from "@/data/giopt/answers";
-import { resolveQuestion } from "@/lib/giopt/resolve-question";
+import { answerQuestion } from "@/lib/giopt/answer-question";
+import type { GioPTMessage } from "@/types/giopt";
 import type { VisitorProfile } from "@/types/visitor";
 
 const cornerControlPlacement: CornerIconButtonPlacement = "cascaded";
+const LOCAL_ANSWER_DELAY_MS = 3000;
 
 export function PortfolioCommandMenu() {
   const reduceMotion = useReducedMotion();
@@ -35,6 +37,13 @@ export function PortfolioCommandMenu() {
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const isFixed = hasInteracted || pendingQuestion !== null || Boolean(answer);
   const menuRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<GioPTMessage[]>([]);
+  const requestRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => {
+    requestRef.current?.abort();
+    setAvatarThinking(false);
+  }, []);
 
   useEffect(() => {
     if (!hasInteracted || pendingQuestion !== null || answer) return;
@@ -76,17 +85,52 @@ export function PortfolioCommandMenu() {
   }
 
   async function processQuestion(submittedQuestion: string, context: VisitorProfile) {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
     setIsLoading(true);
     setIsClosingAnswer(false);
     setAnswer("");
     setSuggestedQuestions([]);
     setAvatarThinking(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 7000));
-    const response = resolveQuestion(submittedQuestion, presetAnswers, context);
-    setAnswer(response.answer);
-    setSuggestedQuestions(response.suggestedQuestions ?? []);
-    setAvatarThinking(false);
-    setIsLoading(false);
+    // console.log("usercontext", context);
+    try {
+      const response = await answerQuestion(submittedQuestion, presetAnswers, context, {
+        messages: messagesRef.current,
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
+      if (response.source === "preset" || response.intent) {
+        await new Promise<void>((resolve) => {
+          const finish = () => {
+            window.clearTimeout(timer);
+            controller.signal.removeEventListener("abort", finish);
+            resolve();
+          };
+          const timer = window.setTimeout(finish, LOCAL_ANSWER_DELAY_MS);
+          controller.signal.addEventListener("abort", finish, { once: true });
+        });
+      }
+      if (controller.signal.aborted) return;
+      setAnswer(response.answer);
+      setSuggestedQuestions(response.suggestedQuestions ?? []);
+      if (!response.intent && response.source !== "fallback") {
+        messagesRef.current = [
+          ...messagesRef.current,
+          { role: "user" as const, content: submittedQuestion },
+          { role: "assistant" as const, content: response.answer },
+        ].slice(-20);
+      }
+    } catch {
+      if (!controller.signal.aborted) {
+        setAnswer("I couldn’t get an answer right now. Please try again.");
+      }
+    } finally {
+      if (requestRef.current === controller && !controller.signal.aborted) {
+        setAvatarThinking(false);
+        setIsLoading(false);
+      }
+    }
   }
 
   return (

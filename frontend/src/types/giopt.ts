@@ -1,4 +1,4 @@
-import type { Industry, VisitorType } from "@/types/visitor"
+import type { Industry, Role, VisitorType } from "@/types/visitor"
 
 export type PortfolioLink = {
   label: string
@@ -28,6 +28,7 @@ export type NonPortfolioIntent =
 export type MatchResult = {
   preset: PresetAnswer
   score: number
+  relevanceScore: number
   matchedKeywords: string[]
   matchedPhrases: string[]
   exactQuestionMatch: boolean
@@ -35,10 +36,26 @@ export type MatchResult = {
 
 export type ChatGioPTResponse = {
   answer: string
-  source: "preset" | "fallback"
+  source: "preset" | "fallback" | "api"
   links: PortfolioLink[]
   matchedId?: string
   score?: number
   intent?: NonPortfolioIntent
   suggestedQuestions?: string[]
 }
+
+export type GioPTMessage = {
+  role: "user" | "assistant"
+  content: string
+}
+
+export type GioPTApiRequest = {
+  visitor: {
+    type: VisitorType | null
+    industry: Industry | null
+    role: Role | null
+  }
+  messages: GioPTMessage[]
+}
+
+export type GioPTApiResponse = { answer: string }
