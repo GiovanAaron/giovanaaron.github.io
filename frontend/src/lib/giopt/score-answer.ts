@@ -1,7 +1,7 @@
+import type { VisitorProfile } from "@/types/visitor"
 import {
   MatchResult,
   PresetAnswer,
-  VisitorContext,
 } from "@/types/giopt"
 
 import {
@@ -14,14 +14,14 @@ const SCORE = {
   exactQuestion: 100,
   phrase: 8,
   keyword: 3,
-  sector: 6,
+  industry: 6,
   audience: 2,
 } as const
 
 export function scoreAnswer(
   question: string,
   preset: PresetAnswer,
-  context?: VisitorContext,
+  context?: VisitorProfile,
 ): MatchResult {
   const normalizedQuestion = normalizeQuestion(question)
   const questionTokens = new Set(tokenizeQuestion(question))
@@ -42,9 +42,9 @@ export function scoreAnswer(
     hasWholePhrase(normalizedQuestion, phrase),
   )
 
-  const sectorMatch = Boolean(
-    context?.targetSector &&
-      preset.sectors?.includes(context.targetSector),
+  const industryMatch = Boolean(
+    context?.requestedIndustry &&
+      preset.industries?.includes(context.requestedIndustry),
   )
 
   const audienceMatch = Boolean(
@@ -60,7 +60,7 @@ export function scoreAnswer(
   // Context can improve a relevant match, but cannot create one.
   const contextScore =
     relevanceScore > 0
-      ? (sectorMatch ? SCORE.sector : 0) +
+      ? (industryMatch ? SCORE.industry : 0) +
         (audienceMatch ? SCORE.audience : 0)
       : 0
 
@@ -76,7 +76,7 @@ export function scoreAnswer(
 export function rankAnswers(
   question: string,
   presets: PresetAnswer[],
-  context?: VisitorContext,
+  context?: VisitorProfile,
 ): MatchResult[] {
   return presets
     .map(preset => scoreAnswer(question, preset, context))

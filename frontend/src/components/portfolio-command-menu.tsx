@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useEffectEvent, useState } from "react";
 import { ArrowUp, LoaderCircle, Sparkles, X } from "lucide-react";
 
 import {
@@ -15,22 +15,34 @@ import {
 import { setAvatarThinking } from "@/lib/avatar-state";
 
 import { Button } from "@/components/ui/button";
+import { useVisitor } from "@/components/visitor-provider";
 import { presetAnswers } from "@/data/giopt/answers";
 import { resolveQuestion } from "@/lib/giopt/resolve-question";
-import type { Sector, VisitorContext, VisitorType } from "@/types/giopt";
+import type { Industry, Role, VisitorType, VisitorProfile } from "@/types/visitor";
 
 const visitorOptions: { label: string; value: VisitorType }[] = [
-  { label: "Talent Partner/Agency", value: "agency" },
-  { label: "Internal Talent Acquisition", value: "internal" },
+  { label: "Talent Partner/Agency", value: "talent_partner_agency" },
+  { label: "Internal Recruitment Specialist", value: "internal_recruitment_specialist" },
   { label: "Other", value: "other" },
 ];
-const sectorOptions: { label: string; value: Sector }[] = [
-  { label: "Healthcare/Medicine", value: "healthcare" },
-  { label: "Finance", value: "fintech" },
-  { label: "Renewable Energy/Envirotech", value: "climate" },
-  { label: "Other", value: "general" },
+const industryOptions: { label: string; value: Industry; description?: string }[] = [
+  { label: "AI", value: "ai" },
+  { label: "Healthtech", value: "healthtech" },
+  { label: "Tech for good / Nonprofit", value: "tech_for_good_nonprofit" },
+  { label: "Finance / Banking", value: "finance_banking" },
+  { label: "Greentech / Renewable energy", value: "greentech_renewable_energy" },
+  { label: "Energy", value: "energy" },
+  { label: "Retail", value: "retail" },
+  { label: "Media / Publishing", value: "media_publishing" },
+  { label: "B2B", value: "b2b" },
+  { label: "None of the above", value: "ai", description: "Use the default AI CV for your selected role." },
 ];
-
+const roleOptions: { label: string; value: Role }[] = [
+  { label: "Full Stack Development", value: "full_stack" },
+  { label: "Backend Development", value: "backend" },
+  { label: "Frontend Development", value: "frontend" },
+  { label: "Mobile Development", value: "mobile" },
+];
 const cornerControlPlacement: CornerIconButtonPlacement = "cascaded";
 
 export function PortfolioCommandMenu() {
@@ -40,8 +52,11 @@ export function PortfolioCommandMenu() {
   const [isLoading, setIsLoading] = useState(false);
   const [isClosingAnswer, setIsClosingAnswer] = useState(false);
 
-  const [visitorContext, setVisitorContext] = useState<VisitorContext | null>(null);
-  const [visitorType, setVisitorType] = useState<VisitorType | null>(null);
+  const visitorContext = useVisitor();
+  const { visitorType, requestedIndustry, role, setVisitorType, setIndustry, setRole } = visitorContext;
+  const hasVisitorProfile = visitorType === "other" || Boolean(visitorType && requestedIndustry && role);
+  const [queuedQuestion, setQueuedQuestion] = useState<string | null>(null);
+  const [onboardingStep, setOnboardingStep] = useState<"visitor" | "industry" | "role">("visitor");
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
 
   function dismissAnswer() {
@@ -56,9 +71,10 @@ export function PortfolioCommandMenu() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const submittedQuestion = question.trim();
-    if (!submittedQuestion || isLoading || pendingQuestion !== null) return;
+    if (!submittedQuestion || isLoading || pendingQuestion !== null || queuedQuestion !== null) return;
 
-    if (!visitorContext) {
+    if (!hasVisitorProfile) {
+      setOnboardingStep(!visitorType ? "visitor" : !requestedIndustry ? "industry" : "role");
       setPendingQuestion(submittedQuestion);
       return;
     }
@@ -66,15 +82,14 @@ export function PortfolioCommandMenu() {
     void processQuestion(submittedQuestion, visitorContext);
   }
 
-  function selectSector(targetSector: Sector) {
-    if (!visitorType || pendingQuestion === null || isLoading) return;
-    const context: VisitorContext = { visitorType, targetSector };
-    setVisitorContext(context);
+  function selectRole(selectedRole: Role) {
+    if (!visitorType || !requestedIndustry || pendingQuestion === null || isLoading) return;
+    setRole(selectedRole);
     setPendingQuestion(null);
-    void processQuestion(pendingQuestion, context);
+    setQueuedQuestion(pendingQuestion);
   }
 
-  async function processQuestion(submittedQuestion: string, context: VisitorContext) {
+  async function processQuestion(submittedQuestion: string, context: VisitorProfile) {
     setIsLoading(true);
     setIsClosingAnswer(false);
     setAnswer("");
@@ -88,6 +103,17 @@ export function PortfolioCommandMenu() {
     setIsLoading(false);
   }
 
+  // Wait for the provider to commit the completed visitor preferences.
+  const processQueuedQuestion = useEffectEvent((submittedQuestion: string) => {
+    setQueuedQuestion(null);
+    void processQuestion(submittedQuestion, visitorContext);
+  });
+  useEffect(() => {
+    if (!queuedQuestion || !hasVisitorProfile) return;
+    const timer = window.setTimeout(() => processQueuedQuestion(queuedQuestion), 0);
+    return () => window.clearTimeout(timer);
+  }, [queuedQuestion, hasVisitorProfile]);
+
   return (
     <div className="fixed bottom-11 left-1/2 z-50
 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2
@@ -99,42 +125,63 @@ lg:relative lg:bottom-auto lg:left-auto lg:mx-auto lg:mb-8 lg:mt-8 lg:translate-
           aria-label="Your background"
           className="bg-background/95 border-border mb-3 max-h-[65dvh] overflow-y-auto rounded-2xl border p-5 shadow-lg backdrop-blur-xl"
         >
-          <p className="text-muted-foreground text-xs">Step {visitorType ? "2" : "1"} of 2</p>
+          <p className="text-muted-foreground text-xs">Step {onboardingStep === "visitor" ? "1" : onboardingStep === "industry" ? "2" : "3"} of 3</p>
           <h2
-            key={visitorType ? "sector" : "visitor"}
+            key={onboardingStep}
             ref={(node) => { node?.focus(); }}
             tabIndex={-1}
             className="mt-2 text-base font-semibold outline-none"
           >
-            {visitorType ? "What sector do you belong to?" : "Are you a…?"}
+            {onboardingStep === "visitor" ? "Are you a…?" : onboardingStep === "industry" ? "What industry do you belong to?" : "What role are you looking for?"}
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
             A little context helps me answer your question.
           </p>
           <div className="mt-4 flex flex-col gap-2">
-            {visitorType
-              ? sectorOptions.map((option) => (
+            {onboardingStep === "role"
+              ? roleOptions.map((option) => (
                   <Button key={option.value} type="button" variant="outline"
                     className="h-auto min-h-11 justify-start whitespace-normal px-3 py-2 text-left"
-                    onClick={() => selectSector(option.value)}>
+                    onClick={() => selectRole(option.value)}>
                     {option.label}
+                  </Button>
+                ))
+              : onboardingStep === "industry" ? industryOptions.map((option) => (
+                  <Button key={option.label} type="button" variant="outline"
+                    className="h-auto min-h-11 justify-start whitespace-normal px-3 py-2 text-left"
+                    onClick={() => { setIndustry(option.value); setOnboardingStep("role"); }}>
+                    <span>
+                      {option.label}
+                      {option.description ? (
+                        <span className="text-muted-foreground mt-1 block text-xs font-normal">
+                          {option.description}
+                        </span>
+                      ) : null}
+                    </span>
                   </Button>
                 ))
               : visitorOptions.map((option) => (
                   <Button key={option.value} type="button" variant="outline"
                     className="h-auto min-h-11 justify-start whitespace-normal px-3 py-2 text-left"
-                    onClick={() => setVisitorType(option.value)}>
+                    onClick={() => {
+                      setVisitorType(option.value);
+                      if (option.value === "other") {
+                        setQueuedQuestion(pendingQuestion);
+                        setPendingQuestion(null);
+                      } else {
+                        setOnboardingStep("industry");
+                      }
+                    }}>
                     {option.label}
                   </Button>
                 ))}
           </div>
           <div className="mt-3 flex gap-2">
-            {visitorType ? (
-              <Button type="button" variant="ghost" onClick={() => setVisitorType(null)}>Back</Button>
+            {onboardingStep !== "visitor" ? (
+              <Button type="button" variant="ghost" onClick={() => setOnboardingStep(onboardingStep === "role" ? "industry" : "visitor")}>Back</Button>
             ) : null}
             <Button type="button" variant="ghost" onClick={() => {
               setPendingQuestion(null);
-              setVisitorType(null);
             }}>Cancel</Button>
           </div>
         </section>
@@ -175,7 +222,7 @@ lg:relative lg:bottom-auto lg:left-auto lg:mx-auto lg:mb-8 lg:mt-8 lg:translate-
                     className="h-auto min-h-11 justify-start whitespace-normal px-3 py-2 text-left"
                     disabled={isLoading || isClosingAnswer}
                     onClick={() => {
-                      if (!visitorContext || isLoading || isClosingAnswer) return;
+                      if (!hasVisitorProfile || isLoading || isClosingAnswer) return;
                       setQuestion(suggestion);
                       void processQuestion(suggestion, visitorContext);
                     }}
@@ -220,7 +267,7 @@ lg:relative lg:bottom-auto lg:left-auto lg:mx-auto lg:mb-8 lg:mt-8 lg:translate-
             <Sparkles className="text-primary size-4" />
           </InputGroupAddon>
           <InputGroupInput
-            disabled={pendingQuestion !== null || isLoading}
+            disabled={pendingQuestion !== null || queuedQuestion !== null || isLoading}
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             name="portfolio-question"
@@ -233,7 +280,7 @@ lg:relative lg:bottom-auto lg:left-auto lg:mx-auto lg:mb-8 lg:mt-8 lg:translate-
           <InputGroupAddon align="inline-end" className="contents">
             <CornerIconButton
               type="submit"
-              disabled={!question.trim() || isLoading || pendingQuestion !== null}
+              disabled={!question.trim() || isLoading || pendingQuestion !== null || queuedQuestion !== null}
               aria-label="Ask question"
               placement={"inset"}
             >
