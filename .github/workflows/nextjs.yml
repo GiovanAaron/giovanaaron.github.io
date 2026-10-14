@@ -71,6 +71,7 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
         env:
           NEXT_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_GIOPT_API_URL: ${{ secrets.NEXT_PUBLIC_GIOPT_API_URL }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
