@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useEffectEvent, useState } from "react";
+import { FormEvent, useEffect, useEffectEvent, useRef, useState } from "react";
 import { ArrowUp, LoaderCircle, Sparkles, X } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 import {
   InputGroup,
@@ -21,7 +22,7 @@ import { resolveQuestion } from "@/lib/giopt/resolve-question";
 import type { Industry, Role, VisitorType, VisitorProfile } from "@/types/visitor";
 
 const visitorOptions: { label: string; value: VisitorType }[] = [
-  { label: "Talent Partner/Agency", value: "talent_partner_agency" },
+  { label: "Talent Partner/ Agency", value: "talent_partner_agency" },
   { label: "Internal Recruitment Specialist", value: "internal_recruitment_specialist" },
   { label: "Other", value: "other" },
 ];
@@ -35,7 +36,9 @@ const industryOptions: { label: string; value: Industry; description?: string }[
   { label: "Retail", value: "retail" },
   { label: "Media / Publishing", value: "media_publishing" },
   { label: "B2B", value: "b2b" },
-  { label: "None of the above", value: "ai", description: "Use the default AI CV for your selected role." },
+  { label: "None of the above", value: "ai", 
+    // description: "Use the default AI CV for your selected role." 
+  },
 ];
 const roleOptions: { label: string; value: Role }[] = [
   { label: "Full Stack Development", value: "full_stack" },
@@ -46,18 +49,35 @@ const roleOptions: { label: string; value: Role }[] = [
 const cornerControlPlacement: CornerIconButtonPlacement = "cascaded";
 
 export function PortfolioCommandMenu() {
+  const reduceMotion = useReducedMotion();
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isClosingAnswer, setIsClosingAnswer] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const isFixed = hasInteracted || pendingQuestion !== null || Boolean(answer);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasInteracted || pendingQuestion !== null || answer) return;
+
+    function handleOutsidePointerDown(event: PointerEvent) {
+      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) {
+        setHasInteracted(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handleOutsidePointerDown, true);
+    return () => document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
+  }, [hasInteracted, pendingQuestion, answer]);
 
   const visitorContext = useVisitor();
   const { visitorType, requestedIndustry, role, setVisitorType, setIndustry, setRole } = visitorContext;
   const hasVisitorProfile = visitorType === "other" || Boolean(visitorType && requestedIndustry && role);
   const [queuedQuestion, setQueuedQuestion] = useState<string | null>(null);
   const [onboardingStep, setOnboardingStep] = useState<"visitor" | "industry" | "role">("visitor");
-  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
 
   function dismissAnswer() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -115,10 +135,23 @@ export function PortfolioCommandMenu() {
   }, [queuedQuestion, hasVisitorProfile]);
 
   return (
-    <div className="fixed bottom-11 left-1/2 z-50
-w-[calc(100%-2rem)] max-w-xl -translate-x-1/2
-lg:relative lg:bottom-auto lg:left-auto lg:mx-auto lg:mb-8 lg:mt-8 lg:translate-x-0
-    "
+    <div className="lg:mx-auto lg:my-8 lg:min-h-14 lg:w-[calc(100%-2rem)] lg:max-w-xl">
+    <motion.div
+      ref={menuRef}
+      layout="position"
+      layoutDependency={isFixed}
+      transition={{
+        layout: reduceMotion
+          ? { duration: 0 }
+          : { type: "spring", stiffness: 70, damping: 14, mass: 1.2 },
+      }}
+      onFocusCapture={() => setHasInteracted(true)}
+      onPointerDownCapture={() => setHasInteracted(true)}
+      className={`fixed bottom-11 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 ${
+        isFixed
+          ? ""
+          : "lg:relative lg:bottom-auto lg:left-auto lg:w-full lg:translate-x-0"
+      }`}
     >
       {pendingQuestion !== null ? (
         <section
@@ -289,6 +322,7 @@ lg:relative lg:bottom-auto lg:left-auto lg:mx-auto lg:mb-8 lg:mt-8 lg:translate-
           </InputGroupAddon>
         </InputGroup>
       </form>
+    </motion.div>
     </div>
   );
 }
