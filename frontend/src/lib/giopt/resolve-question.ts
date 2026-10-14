@@ -9,8 +9,8 @@ import {
 import { normalizeQuestion, tokenizeQuestion } from "./normalise-question"
 import { rankAnswers, scoreAnswer } from "./score-answer"
 
-const MINIMUM_MATCH_SCORE = 5
-const AMBIGUITY_MARGIN = 2
+const MINIMUM_RELEVANCE_SCORE = 11
+const AMBIGUITY_MARGIN = 4
 
 const intentInputs: Record<NonPortfolioIntent, string[]> = {
   greeting: [
@@ -186,11 +186,14 @@ export function resolveQuestion(
 
   const rankedAnswers = rankAnswers(question, presets, context)
   const bestMatch = rankedAnswers[0]
-  const secondBestMatch = rankedAnswers[1]
+  const secondBestMatch = rankedAnswers.find(match => match.preset.id !== bestMatch?.preset.id)
 
-  console.log("Best match score:", bestMatch?.score)
+  // Visitor preferences can rank answers, but cannot make weak evidence confident.
+  const isAmbiguous = bestMatch && secondBestMatch &&
+    !bestMatch.exactQuestionMatch &&
+    bestMatch.relevanceScore - secondBestMatch.relevanceScore < AMBIGUITY_MARGIN
 
-  if (!bestMatch || bestMatch.score < MINIMUM_MATCH_SCORE) {
+  if (!bestMatch || bestMatch.relevanceScore < MINIMUM_RELEVANCE_SCORE || isAmbiguous) {
     return {
       answer:
         "To keep answers accurate and avoid AI guesswork, please reword your question or try one of the suggested questions below.",
@@ -199,24 +202,6 @@ export function resolveQuestion(
       suggestedQuestions: getFallbackSuggestions(presets, 3, question, context),
     }
   }
-
-  // const isAmbiguous =
-  //   secondBestMatch &&
-  //   !bestMatch.exactQuestionMatch &&
-  //   bestMatch.score - secondBestMatch.score <= AMBIGUITY_MARGIN
-
-  // if (isAmbiguous) {
-  //   return {
-  //     answer:
-  //       "That could refer to more than one part of Giovan’s experience. Try one of these more specific questions.",
-  //     source: "fallback",
-  //     links: [],
-  //     suggestedQuestions: [
-  //       bestMatch.preset.suggestedQuestion,
-  //       secondBestMatch.preset.suggestedQuestion,
-  //     ],
-  //   }
-  // }
 
   return {
     answer: bestMatch.preset.answer,

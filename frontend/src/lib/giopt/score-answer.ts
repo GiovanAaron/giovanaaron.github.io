@@ -67,6 +67,7 @@ export function scoreAnswer(
   return {
     preset,
     score: relevanceScore + contextScore,
+    relevanceScore,
     matchedKeywords,
     matchedPhrases,
     exactQuestionMatch,
