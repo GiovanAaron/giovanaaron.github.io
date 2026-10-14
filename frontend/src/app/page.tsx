@@ -15,8 +15,7 @@ import AboutMe from "@/components/about-me";
 import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useVisitor } from "@/components/visitor-provider";
-import { cvAssets } from "@/data/cv-assets";
+import { ResumeDownload } from "@/components/resume-download";
 import Logo from "@/components/ui/logo"
 
 import uclLogo from "@/assets/company_logos/ucl_logo.svg";
@@ -53,6 +52,7 @@ const techStack = [
   "AWS",
   "Azure",
   "Figma",
+  "OpenAi"
 ];
 
 const techStackBackgrounds = [
@@ -62,8 +62,6 @@ const techStackBackgrounds = [
 ];
 
 export default function Home() {
-  const { resolution } = useVisitor();
-  const resumeAsset = resolution?.asset ?? cvAssets[0];
   const [isAboutActive, setIsAboutActive] = useState(false);
   const reduceMotion = useReducedMotion();
   const sectionTransition = {
@@ -235,13 +233,7 @@ export default function Home() {
                 </li>
               ))}
               <li className="inline-flex">
-                <a
-                  href={`/cv/${encodeURIComponent(resumeAsset.filename)}`}
-                  download={resumeAsset.filename}
-                  className="bg-primary text-primary-foreground inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                  Download my resume
-                </a>
+                <ResumeDownload />
               </li>
             </ul>
           </div>

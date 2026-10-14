@@ -24,22 +24,24 @@ export function VisitorProvider({ children, assets = cvAssets }: {
   const setRole = useCallback((role: Role) => setRoleState(role), []);
 
   const value = useMemo<VisitorContextValue>(() => {
-    const exactAsset = requestedIndustry && role
-      ? assets.find(asset => asset.industry === requestedIndustry && asset.role === role)
+    const cvIndustry = visitorType === "other" ? "ai" : requestedIndustry;
+    const cvRole = visitorType === "other" ? "full_stack" : role;
+    const exactAsset = cvIndustry && cvRole
+      ? assets.find(asset => asset.industry === cvIndustry && asset.role === cvRole)
       : undefined;
-    const asset = exactAsset ?? (requestedIndustry && role
-      ? assets.find(asset => asset.industry === "ai" && asset.role === role)
+    const asset = exactAsset ?? (cvIndustry && cvRole
+      ? assets.find(asset => asset.industry === "ai" && asset.role === cvRole)
       : undefined);
     return {
       visitorType,
       requestedIndustry,
       role,
-      resolution: asset && requestedIndustry && role ? {
-        requestedIndustry,
+      resolution: visitorType && asset && cvIndustry && cvRole ? {
+        requestedIndustry: cvIndustry,
         matchedIndustry: asset.industry,
-        role,
+        role: cvRole,
         asset,
-        matchType: exactAsset ? "industry_match" : "ai_default",
+        matchType: exactAsset && visitorType !== "other" ? "industry_match" : "ai_default",
       } : null,
       setVisitorType,
       setIndustry,
