@@ -2,16 +2,11 @@ import Link from "next/link";
 import { ArrowUpRight, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Image from "next/image";
-
-import filmPhoto from "@/assets/about_me/filmphoto.png";
-import parkPhoto from "@/assets/about_me/me_natural_park.png";
-import collagePhoto from "@/assets/about_me/me_bbc.png";
 
 const photos = {
-  film: filmPhoto,
-  park: parkPhoto,
-  collage: collagePhoto,
+  film: "https://u.cubeupload.com/giovan/filmphoto.png",
+  park: "https://u.cubeupload.com/giovan/menaturalpark3u27ju3.jpg",
+  collage: "https://u.cubeupload.com/giovan/mebbc07dq0x7m0xvr.png",
 };
 
 function BrandMark() {
@@ -41,10 +36,9 @@ function EditorialLayout() {
           {/* <div className="mt-7 font-[Georgia,serif] text-[clamp(1.35rem,1.8vw,1.75rem)] font-semibold italic text-[#705144] dark:text-[#d1ad98]">Good ideas deserve a human touch.</div> */}
         </div>
         <div className="relative mx-auto aspect-[.94] w-full max-w-[580px] overflow-hidden rounded-t-[50%] rounded-b-sm bg-[#eee7df]">
-          <Image
+          <img
             width={580}
             height={440}
-            sizes="(min-width: 1440px) 580px, (min-width: 1024px) 40vw, (min-width: 640px) 580px, 100vw"
             className="size-full object-cover object-[center_42%] saturate-[.89]"
             src={photos.film}
             alt="Giovan smiling in a grainy film photograph"
@@ -68,11 +62,11 @@ function EditorialLayout() {
       </div>
       <div className="grid gap-4 md:grid-cols-[.88fr_1.22fr]">
         <figure className="group relative m-0 h-[270px] overflow-hidden bg-cream md:h-[345px]">
-          <img className="size-full object-cover object-[center_62%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.park.src} alt="Giovan on a trail in a green Italian natural park" />
+          <img className="size-full object-cover object-[center_62%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.park} alt="Giovan on a trail in a green Italian natural park" />
           <figcaption className="absolute bottom-3.5 left-3.5 rounded-sm bg-[#fffdf9e8] px-2.5 py-2 text-[10px] text-[#4a423b]">A day out in the Italian countryside</figcaption>
         </figure>
         <figure className="group relative m-0 h-[270px] overflow-hidden bg-cream md:h-[345px]">
-          <img className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" src={photos.collage.src} alt="Three-panel collage showing Giovan at a BBC News set, on an event carpet, and beside a green screen" />
+          <img className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" src={photos.collage} alt="Three-panel collage showing Giovan at a BBC News set, on an event carpet, and beside a green screen" />
           <figcaption className="absolute bottom-3.5 left-3.5 rounded-sm bg-[#fffdf9e8] px-2.5 py-2 text-[10px] text-[#4a423b]">My alter ego as a BBC News reporter</figcaption>
         </figure>
       </div>
@@ -88,15 +82,15 @@ function PhotoLedLayout() {
     <div className="grid items-start gap-9 md:grid-cols-[minmax(0,1.15fr)_minmax(310px,.75fr)] md:gap-12 lg:gap-[7vw]">
       <div className="grid grid-cols-[1.2fr_.8fr] grid-rows-[280px_175px] gap-2.5 sm:grid-rows-[350px_230px] md:grid-rows-[minmax(280px,400px)_270px] md:gap-3.5">
         <figure className="group relative col-span-2 m-0 overflow-hidden bg-cream">
-          <img className="size-full object-cover object-[center_55%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.collage.src} alt="Three-panel collage showing Giovan presenting at a BBC News set, at an event, and on a green-screen set" />
+          <img className="size-full object-cover object-[center_55%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.collage} alt="Three-panel collage showing Giovan presenting at a BBC News set, at an event, and on a green-screen set" />
           <figcaption className="absolute bottom-2 left-2 bg-[#f9f7f2eb] px-2.5 py-2 text-[9px] text-[#514840] sm:bottom-3 sm:left-3 sm:text-[10px]">Behind the scenes, and the moment it came together</figcaption>
         </figure>
         <figure className="group relative m-0 overflow-hidden bg-cream">
-          <img className="size-full object-cover object-[center_40%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.film.src} alt="Giovan smiling in a film photograph" />
+          <img className="size-full object-cover object-[center_40%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.film} alt="Giovan smiling in a film photograph" />
           <figcaption className="absolute bottom-2 left-2 bg-[#f9f7f2eb] px-2 py-1.5 text-[9px] text-[#514840] sm:bottom-3 sm:left-3 sm:px-2.5 sm:text-[10px]">Grain, light, good company</figcaption>
         </figure>
         <figure className="group relative m-0 overflow-hidden bg-cream">
-          <img className="size-full object-cover object-[center_58%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.park.src} alt="Giovan surrounded by green hills and a lake in Italy" />
+          <img className="size-full object-cover object-[center_58%] transition-transform duration-500 group-hover:scale-[1.02]" src={photos.park} alt="Giovan surrounded by green hills and a lake in Italy" />
           <figcaption className="absolute bottom-2 left-2 bg-[#f9f7f2eb] px-2 py-1.5 text-[9px] text-[#514840] sm:bottom-3 sm:left-3 sm:px-2.5 sm:text-[10px]">A slower day outdoors</figcaption>
         </figure>
       </div>
