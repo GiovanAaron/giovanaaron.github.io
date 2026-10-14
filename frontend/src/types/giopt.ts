@@ -1,17 +1,4 @@
-export type VisitorType = "agency" | "internal" | "other"
-
-export type Sector =
-  | "healthcare"
-  | "climate"
-  | "ai-tech"
-  | "fintech"
-  | "public-impact"
-  | "general"
-
-export type VisitorContext = {
-  visitorType: VisitorType
-  targetSector?: Sector
-}
+import type { Industry, VisitorType } from "@/types/visitor"
 
 export type PortfolioLink = {
   label: string
@@ -24,10 +11,9 @@ export type PresetAnswer = {
   answer: string
   keywords: string[]
   phrases: string[]
-  sectors?: Sector[]
+  industries?: Industry[]
   audiences?: VisitorType[]
   links?: PortfolioLink[]
-  cvVariant?: Sector | "general"
 }
 
 export type NonPortfolioIntent =

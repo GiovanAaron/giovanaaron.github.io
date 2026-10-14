@@ -15,6 +15,7 @@ import AboutMe from "@/components/about-me";
 import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ResumeDownload } from "@/components/resume-download";
 import Logo from "@/components/ui/logo"
 
 import uclLogo from "@/assets/company_logos/ucl_logo.svg";
@@ -51,6 +52,7 @@ const techStack = [
   "AWS",
   "Azure",
   "Figma",
+  "OpenAi"
 ];
 
 const techStackBackgrounds = [
@@ -230,6 +232,9 @@ export default function Home() {
                   {technology}
                 </li>
               ))}
+              <li className="inline-flex">
+                <ResumeDownload />
+              </li>
             </ul>
           </div>
         </div>

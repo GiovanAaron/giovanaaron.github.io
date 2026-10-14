@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest"
 import { presetAnswers } from "@/data/giopt/answers"
 import type { NonPortfolioIntent, PresetAnswer } from "@/types/giopt"
 
+import type { VisitorProfile } from "@/types/visitor"
+import { cvAssets } from "@/data/cv-assets"
+
 import { resolveQuestion } from "./resolve-question"
 
 describe("resolveQuestion", () => {
@@ -34,35 +37,36 @@ describe("resolveQuestion", () => {
       expect(response.source).toBe("preset")
     })
 
-    it("returns the preset link and its sector-specific CV", () => {
-      const response = resolveQuestion(
-        "What has Giovan built in climate technology?",
-        presetAnswers,
-      )
-
-      expect(response.links).toEqual([
-        {
-          label: "Explore Gio/Grid",
-          href: "https://giovanaaron.github.io/Gio-Grid/",
-        },
-        {
-          label: "Download climate and energy CV",
-          href: "/cv/giovan-aaron-climate.pdf",
-        },
-      ])
+    it("returns preset links without inventing a CV when no resolution exists", () => {
+      const response = resolveQuestion("What has Giovan built in climate technology?", presetAnswers)
+      expect(response.links).toEqual([{
+        label: "Explore Gio/Grid",
+        href: "https://giovanaaron.github.io/Gio-Grid/",
+      }])
     })
 
-    it("uses visitor context to add a CV when the preset has no CV variant", () => {
-      const response = resolveQuestion(
-        "What has Giovan launched independently?",
-        presetAnswers,
-        { visitorType: "agency", targetSector: "fintech" },
-      )
-
-      expect(response.links).toContainEqual({
-        label: "Download fintech CV",
-        href: "/cv/giovan-aaron-fintech.pdf",
-      })
+    it("uses the provider's role-specific CV resolution even for an industry-specific preset", () => {
+      const asset = cvAssets.find(asset => asset.role === "mobile")!
+      const context: VisitorProfile = {
+        visitorType: "talent_partner_agency",
+        requestedIndustry: "finance_banking",
+        role: "mobile",
+        resolution: {
+          requestedIndustry: "finance_banking",
+          matchedIndustry: "ai",
+          role: "mobile",
+          asset,
+          matchType: "ai_default",
+        },
+      }
+      for (const question of ["What has Giovan built in climate technology?", "What has Giovan launched independently?"]) {
+        const response = resolveQuestion(question, presetAnswers, context)
+        expect(response.links).toContainEqual({
+          label: "Download CV",
+          href: `/cv/${encodeURIComponent(asset.filename)}`,
+        })
+        expect(response.links.filter(link => link.href.startsWith("/cv/"))).toHaveLength(1)
+      }
     })
 
     it("falls back when no portfolio answer is relevant enough", () => {
@@ -133,9 +137,9 @@ describe("resolveQuestion", () => {
     })
 
     it("offers questions that resolve to presets with every onboarding context", () => {
-      for (const visitorType of ["agency", "internal", "other"] as const) {
-        for (const targetSector of ["healthcare", "fintech", "climate", "general"] as const) {
-          const context = { visitorType, targetSector }
+      for (const visitorType of ["talent_partner_agency", "internal_recruitment_specialist", "other"] as const) {
+        for (const requestedIndustry of ["ai", "healthtech", "tech_for_good_nonprofit", "finance_banking", "greentech_renewable_energy", "energy", "retail", "media_publishing", "b2b"] as const) {
+          const context: VisitorProfile = { visitorType, requestedIndustry, role: "full_stack", resolution: null }
           const response = resolveQuestion("Does Giovan enjoy photography?", presetAnswers, context)
           expect(response.suggestedQuestions?.length).toBeGreaterThan(0)
           for (const suggestion of response.suggestedQuestions ?? []) {

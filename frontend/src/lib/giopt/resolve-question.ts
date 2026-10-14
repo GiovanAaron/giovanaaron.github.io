@@ -1,10 +1,9 @@
+import type { VisitorProfile } from "@/types/visitor"
 import {
   ChatGioPTResponse,
   NonPortfolioIntent,
   PortfolioLink,
   PresetAnswer,
-  Sector,
-  VisitorContext,
 } from "@/types/giopt"
 
 import { normalizeQuestion, tokenizeQuestion } from "./normalise-question"
@@ -108,38 +107,6 @@ const intentResponses: Record<NonPortfolioIntent, string> = {
     "Let’s keep things constructive. I can help with questions about Giovan’s work.",
 }
 
-const cvBySector: Record<Sector, PortfolioLink> = {
-  healthcare: {
-    label: "Download healthcare CV",
-    href: "/cv/giovan-aaron-healthcare.pdf",
-  },
-
-  climate: {
-    label: "Download climate and energy CV",
-    href: "/cv/giovan-aaron-climate.pdf",
-  },
-
-  "ai-tech": {
-    label: "Download AI and software CV",
-    href: "/cv/giovan-aaron-ai-software.pdf",
-  },
-
-  fintech: {
-    label: "Download fintech CV",
-    href: "/cv/giovan-aaron-fintech.pdf",
-  },
-
-  "public-impact": {
-    label: "Download tech-for-good CV",
-    href: "/cv/giovan-aaron-tech-for-good.pdf",
-  },
-
-  general: {
-    label: "Download software developer CV",
-    href: "/cv/giovan-aaron-software-developer.pdf",
-  },
-}
-
 function detectNonPortfolioIntent(
   question: string,
 ): NonPortfolioIntent | null {
@@ -162,7 +129,7 @@ function getFallbackSuggestions(
   presets: PresetAnswer[],
   limit = 3,
   question = "",
-  context?: VisitorContext,
+  context?: VisitorProfile,
 ): string[] {
   const questionTokens = new Set(tokenizeQuestion(question))
 
@@ -183,14 +150,15 @@ function getFallbackSuggestions(
 
 function getLinks(
   preset: PresetAnswer,
-  context?: VisitorContext,
+  context?: VisitorProfile,
 ): PortfolioLink[] {
   const links = [...(preset.links ?? [])]
 
-  if (preset.cvVariant) {
-    links.push(cvBySector[preset.cvVariant])
-  } else if (context?.targetSector) {
-    links.push(cvBySector[context.targetSector])
+  if (context?.resolution) {
+    links.push({
+      label: "Download CV",
+      href: `/cv/${encodeURIComponent(context.resolution.asset.filename)}`,
+    })
   }
 
   return links.filter(
@@ -202,7 +170,7 @@ function getLinks(
 export function resolveQuestion(
   question: string,
   presets: PresetAnswer[],
-  context?: VisitorContext,
+  context?: VisitorProfile,
 ): ChatGioPTResponse {
   const intent = detectNonPortfolioIntent(question)
 
