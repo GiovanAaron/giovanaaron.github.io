@@ -20,8 +20,8 @@ function BrandMark() {
 
 
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[.16em] text-[#705144] before:h-px before:w-6 before:bg-[#cba58b] dark:text-[#d1ad98] sm:text-xs">{children}</div>;
+function Eyebrow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`flex items-center gap-3 text-[11px] font-bold uppercase tracking-[.16em] text-[#705144] before:h-px before:w-6 before:bg-[#cba58b] dark:text-[#d1ad98] sm:text-xs ${className}`}>{children}</div>;
 }
 
 function EditorialLayout() {
@@ -29,10 +29,10 @@ function EditorialLayout() {
     <>
       <div className="grid items-center gap-12 text-left lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-[clamp(4rem,10vw,12rem)]">
         <div className="max-w-[620px]">
-          <Eyebrow>A little more about me</Eyebrow>
-          <h1 className="mt-7 max-w-[8.5ch] text-[clamp(3.5rem,6.4vw,6.5rem)] font-se leading-[1] tracking-[-.065em] text-[#22201e] dark:text-[#f5f0eb]">Curious by nature.<br /><em className="block font-[Georgia,serif] font-normal tracking-[-.06em] text-[#705144] dark:text-[#d1ad98]">Creative by default.</em></h1>
-          <p className="mt-8 max-w-[620px] text-base leading-[1.8] text-[#706c67] dark:text-muted-foreground lg:text-lg">My route into software wasn’t a straight line. I graduated with a MSc Management of Innovation, then moved from project delivery at University College London towards building products myself. That mix still shapes me: I enjoy seeing the bigger picture, caring about the details, and asking whether what we make is genuinely useful to people.</p>
-          <p className="mt-5 max-w-[620px] text-base leading-[1.8] text-[#706c67] dark:text-muted-foreground lg:text-lg">I’m drawn to work where care and craft matter, and where technology can feel clear, thoughtful and welcoming. Outside product work, I build games and produce electronic music, two ways I keep experimenting and telling stories.</p>
+          <Eyebrow className="lg:text-[10px]">A little more about me</Eyebrow>
+          <h1 className="mt-7 max-w-[8.5ch] text-[clamp(3.5rem,6.4vw,6.5rem)] lg:text-5xl xl:text-6xl 2xl:text-7xl font-se leading-[1] tracking-[-.065em] text-[#22201e] dark:text-[#f5f0eb]">Curious by nature.<br /><em className="block font-[Georgia,serif] font-normal tracking-[-.06em] text-[#705144] dark:text-[#d1ad98]">Creative by default.</em></h1>
+          <p className="mt-8 max-w-[620px] text-base leading-[1.8] text-[#706c67] dark:text-muted-foreground lg:text-sm">My route into software wasn’t a straight line. I graduated with a MSc Management of Innovation, then moved from project delivery at University College London towards building products myself. That mix still shapes me: I enjoy seeing the bigger picture, caring about the details, and asking whether what we make is genuinely useful to people.</p>
+          <p className="mt-5 max-w-[620px] text-base leading-[1.8] text-[#706c67] dark:text-muted-foreground lg:text-sm">I’m drawn to work where care and craft matter, and where technology can feel clear, thoughtful and welcoming. Outside product work, I build games and produce electronic music, two ways I keep experimenting and telling stories.</p>
           {/* <div className="mt-7 font-[Georgia,serif] text-[clamp(1.35rem,1.8vw,1.75rem)] font-semibold italic text-[#705144] dark:text-[#d1ad98]">Good ideas deserve a human touch.</div> */}
         </div>
         <div className="relative mx-auto aspect-[.94] w-full max-w-[580px] overflow-hidden rounded-t-[50%] rounded-b-sm bg-[#eee7df]">
@@ -43,18 +43,22 @@ function EditorialLayout() {
             src={photos.film}
             alt="Giovan smiling in a grainy film photograph"
           />
-          <div className="absolute bottom-5 left-6 text-[9px] tracking-[.17em] text-white drop-shadow">me</div>
+          <div className="absolute bottom-5 left-6 text-[9px] lg:text-[8px] tracking-[.17em] text-white drop-shadow">me</div>
           <div className="absolute bottom-[11%] -left-6 max-w-[205px] -rotate-3 bg-[#fffaf3] px-5 py-4 shadow-[0_15px_35px_rgba(48,39,31,.12)] sm:-left-4">
-            <small className="block text-[9px] uppercase tracking-[.16em] text-[#958271]">Off the clock</small>
-            <span className="mt-1.5 block font-[Georgia,serif] text-xl leading-tight text-[#44362e]">Tori Amos #1 fan</span>
+            <small className="block text-[9px] lg:text-[8px] uppercase tracking-[.16em] text-[#958271]">Off the clock</small>
+            <span className="mt-1.5 block font-[Georgia,serif] text-xl lg:text-base leading-tight text-[#44362e]">Tori Amos #1 fan</span>
           </div>
         </div>
       </div>
-      <div className="my-14 grid grid-cols-2 gap-y-5 border-y border-line py-6 md:my-20 md:grid-cols-[.65fr_1fr_1fr_1fr] md:items-center md:gap-5 md:py-7">
-        <h2 className="col-span-2 m-0 text-[10px] font-bold uppercase tracking-[.15em] text-[#988c81] md:col-span-1">What matters to me</h2>
-        {[
+      <div className="my-8 flex flex-wrap items-center justify-between gap-x-5 gap-y-5 border-y border-line py-6 md:my-20 md:py-7 lg:my-8">
+          {/* <h2 className="col-span-2 m-0 text-[10px] font-bold uppercase tracking-[.15em] text-[#988c81] md:col-span-1">What matters to me</h2> */}
+          <h2 className="col-span-2 m-0 text-[10px] font-bold uppercase tracking-[.15em] text-[#988c81] md:col-span-1">Think deeply</h2>
+          <h2 className="col-span-2 m-0 text-[10px] font-bold uppercase tracking-[.15em] text-[#988c81] md:col-span-1">Communicate clearly</h2>
+          <h2 className="col-span-2 m-0 text-[10px] font-bold uppercase tracking-[.15em] text-[#988c81] md:col-span-1">Collaborate generously</h2>
+          <h2 className="col-span-2 m-0 text-[10px] font-bold uppercase tracking-[.15em] text-[#988c81] md:col-span-1">Build with purpose</h2>
+        {/* {[
           ["Useful over flashy", "Care in the details", "Room for play"],
-        ][0].map((value) => <div key={value} className="font-display text-base text-[#4c4642] sm:text-lg">{value}</div>)}
+        ][0].map((value) => <div key={value} className="m-0 text-[10px] font-bold uppercase tracking-[.15em] text-[#988c81]">{value}</div>)} */}
       </div>
       <div className="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <h2 className="m-0 font-display text-2xl font-normal tracking-[-.04em] sm:text-[27px]">A few frames from life beyond the screen</h2>

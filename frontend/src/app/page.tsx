@@ -27,6 +27,7 @@ import rendescoDarkLogo from "@/assets/company_logos/rendesco_logo_dark.svg";
 import unifyGivingLogo from "@/assets/company_logos/unify_giving_logo.svg";
 import nhsLogo from "@/assets/company_logos/nhs_logo.svg";
 import nhirLogo from "@/assets/company_logos/nhir_logo.svg";
+import scrumLogo from "@/assets/company_logos/scrum_logo.svg";
 
 
 const companyLogos = [
@@ -36,6 +37,7 @@ const companyLogos = [
   { name: "NHS", src: nhsLogo },
   { name: "Unify Giving", src: unifyGivingLogo },
   { name: "NHIR", src: nhirLogo },
+  { name: "Scrum", src: scrumLogo },
 ];
 
 const techStack = [
@@ -107,7 +109,7 @@ export default function Home() {
               aria-current={isAboutActive ? "page" : undefined}
               className={`transition-colors hover:text-foreground ${isAboutActive ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}
             >
-              About Me
+              Profile
             </a>
             <a
               href="#products"
@@ -118,7 +120,7 @@ export default function Home() {
               aria-current={activeView === "products" ? "page" : undefined}
               className={`transition-colors hover:text-foreground ${activeView === "products" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}
             >
-              Products
+              My Work
             </a>
            
             {/* <a
@@ -343,7 +345,7 @@ export default function Home() {
           }),
         }}
         transition={sectionTransition}
-        className="mx-auto w-full pt-8 pb-12 text-left sm:pt-10"
+        className="mx-auto w-full pt-2 pb-12 text-left sm:pt-10 lg:pt-0"
         id="about-me"
       >
    
