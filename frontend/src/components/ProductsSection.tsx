@@ -303,33 +303,36 @@ function ProductSlideVisual({ slide, product }: { slide: ProductSlide; product: 
 
 function ProductArtwork({ product }: { product: PortfolioProduct }) {
   const [activeSlide, setActiveSlide] = useState(0);
-  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [rotationMode, setRotationMode] = useState<"automatic" | "manual">("automatic");
+  const rotationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reduceMotion = useReducedMotion();
   const slideCount = product.slides.length;
   const slide = product.slides[activeSlide] ?? product.slides[0];
-  // ProductPanel is keyed by product ID, so each selection starts a fresh timer.
+  // The keyed product panel resets both the slide and rotation mode on selection.
   useEffect(() => {
-    if (slideCount < 2) return;
-    autoAdvanceRef.current = setTimeout(() => {
-      autoAdvanceRef.current = null;
-      setActiveSlide(1);
+    if (rotationMode !== "automatic" || slideCount < 2) return;
+    rotationTimerRef.current = setInterval(() => {
+      setActiveSlide(current => (current + 1) % slideCount);
     }, 5000);
     return () => {
-      if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
-      autoAdvanceRef.current = null;
+      if (rotationTimerRef.current !== null) clearInterval(rotationTimerRef.current);
+      rotationTimerRef.current = null;
     };
-  }, [product.id, slideCount]);
+  }, [product.id, slideCount, rotationMode]);
 
-  function cancelAutoAdvance() {
-    if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
-    autoAdvanceRef.current = null;
+  function enableManualRotation() {
+    if (rotationTimerRef.current !== null) clearInterval(rotationTimerRef.current);
+    rotationTimerRef.current = null;
+    setRotationMode("manual");
   }
   function moveSlide(direction: number) {
-    cancelAutoAdvance();
     setActiveSlide(current => (current + direction + slideCount) % slideCount);
   }
   return (
-    <div role="region" aria-roledescription="carousel" aria-label={`${product.name} visuals`} className={`relative flex min-h-64 flex-col justify-between bg-[#eee7df] p-4 sm:min-h-80 sm:p-5 dark:bg-[#29231f] ${slide.kind === "image" ? "overflow-hidden lg:overflow-visible" : "overflow-hidden"}`}>
+    <div role="region" aria-roledescription="carousel" aria-label={`${product.name} visuals`}
+      onPointerDownCapture={enableManualRotation}
+      onClickCapture={enableManualRotation}
+      className={`relative flex min-h-64 flex-col justify-between bg-[#eee7df] p-4 sm:min-h-80 sm:p-5 dark:bg-[#29231f] ${slide.kind === "image" ? "overflow-hidden lg:overflow-visible" : "overflow-hidden"}`}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute -right-12 -top-14 size-36 rounded-full border border-white/60 sm:size-48" />
       <div className="absolute -bottom-20 -left-16 size-40 rounded-full border border-white/50 sm:size-56" />
@@ -354,7 +357,7 @@ function ProductArtwork({ product }: { product: PortfolioProduct }) {
             </button>
             <div className="flex min-w-0 items-center gap-1 overflow-x-auto px-1">
               {product.slides.map((item, index) => (
-                <button key={item.id} type="button" aria-label={`Show ${item.label}, ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => { cancelAutoAdvance(); setActiveSlide(index); }} className="flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary">
+                <button key={item.id} type="button" aria-label={`Show ${item.label}, ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => setActiveSlide(index)} className="flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary">
                   <span className={`h-2 rounded-full transition-all duration-200 ${activeSlide === index ? "w-4 bg-[#705144] dark:bg-[#d1ad98]" : "w-2 bg-[#b6a99c] hover:bg-[#705144]/70"}`} />
                 </button>
               ))}
@@ -364,7 +367,7 @@ function ProductArtwork({ product }: { product: PortfolioProduct }) {
             </button>
           </div>
         ) : null}
-        <span className="sr-only" aria-live="polite" aria-atomic="true">Slide {activeSlide + 1} of {slideCount}: {slide.label}</span>
+        <span className="sr-only" aria-live={rotationMode === "automatic" ? "off" : "polite"} aria-atomic="true">Slide {activeSlide + 1} of {slideCount}: {slide.label}</span>
       </div>
     </div>
   );
