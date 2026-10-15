@@ -427,7 +427,7 @@ export default function ProductsSection() {
             <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[.16em] text-[#705144] before:h-px before:w-4 before:bg-[#cba58b] dark:text-[#d1ad98] dark:before:bg-[#d1ad98] sm:text-[10px]">Selected work</div>
             <h2 className="mb-0 mt-5 max-w-2xl text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[1] tracking-[-.065em] text-[#22201e] dark:text-[#f5f0eb]">Ideas, care and <em className="font-[Georgia,serif] font-normal text-[#705144] dark:text-[#d1ad98]">things I’ve made.</em></h2>
           </div>
-          <p className="mb-1 max-w-96 text-xs leading-[1.8] text-[#706c67] dark:text-muted-foreground md:justify-self-end lg:text-sm">Independent creative work and product teams, from playful games to tools for wellbeing, energy and giving.</p>
+          {/* <p className="mb-1 max-w-96 text-xs leading-[1.8] text-[#706c67] dark:text-muted-foreground md:justify-self-end lg:text-sm">Selected product engineering work spanning independently launched products and cross-functional teams, with a focus on wellbeing, clean energy, social impact and play.</p> */}
         </div>
 
         <Tabs value={selectedProductId} onValueChange={(value) => setSelectedProductId(value as ProductId)} orientation="vertical" className="gap-0">
