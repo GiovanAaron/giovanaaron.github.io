@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HeartHandshake, Leaf } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HeartHandshake, Leaf, Workflow } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState, type ComponentType } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,8 +8,12 @@ import gumMusicProduction from "@/assets/case_studies/dont_touch_my_gum_musicpro
 import rendescoPrototype from "@/assets/case_studies/rendesco_protoype.svg";
 import rendescoFlowHome from "@/assets/case_studies/rendesco_flow_home_view.svg";
 import unifyGivingApp from "@/assets/case_studies/unify_giving_app.png";
+import carequillDashboard1 from "@/assets/case_studies/carequill_ai_dashboard1.svg";
+import carequillDashboard2 from "@/assets/case_studies/carequill_ai_dashboard2.svg";
+import carequillDashboard3 from "@/assets/case_studies/carequill_ai_dashboard3.svg";
+import carequillCalendar from "@/assets/case_studies/carequill_ai_calendar.svg";
 
-type ProductId = "gum" | "flowfree" | "rendesco" | "giving";
+type ProductId = "gum" | "flowfree" | "rendesco" | "giving" | "carequill";
 
 type ProductProof = { value: string; label: string };
 
@@ -30,6 +34,7 @@ type PortfolioProduct = {
   description: string;
   cta?: { label: string; href: string };
   technologies: string[];
+  architecture?: string[];
   proof: ProductProof[];
   slides: [ProductSlide, ...ProductSlide[]];
 };
@@ -67,7 +72,7 @@ const products: PortfolioProduct[] = [
     number: "02",
     name: "Don’t Touch My Gum!",
     shortName: "Don’t Touch My Gum!",
-    category: "Independent game",
+    category: "Indie Game",
     description: "A desktop mini-game I took from idea to release, bringing together code, illustration, interface design and electronic music production.",
     technologies: ["Python", "PyGame", "Figma", "Procreate", "Ableton"],
     proof: [
@@ -88,12 +93,32 @@ const products: PortfolioProduct[] = [
     name: "Unify Giving",
     shortName: "Unify Giving",
     cta: { label: "Learn more", href: "https://unifygiving.com/about/" },
-    category: "Digital giving",
+    category: "Paytech",
     description: "A mobile donation platform where I helped ship Stripe payments, improve API performance and refine the giving experience.",
     technologies: ["React Native", "Node.js", "PostgreSQL", "Stripe"],
     proof: [
       { value: "60%", label: "API performance improvement" },
       { value: "Stripe", label: "donations launched on mobile" },
+    ],
+  },
+  {
+    id: "carequill",
+    number: "04",
+    name: "Carequill AI",
+    shortName: "Carequill AI",
+    cta: { label: "Book consultation", href: "https://calendar.app.google/eE5FcZnghkSBCSpH8" },
+    category: "Healthcare SAAS",
+    description: "A full-stack healthcare SaaS product translating operational requirements into clear interfaces, relational data models and automated workflows. ServiceNow orchestration and a Python service layer connect risk prioritisation and responsibility routing with payments and scheduling APIs, supported by audit trails and escalation monitoring.",
+    architecture: ["Event-Driven Systems", "Rules Engines", "State Machines", "Webhook Processing", "Role-Based Workflows", "Risk Prioritisation", "Audit Trails"],
+    technologies: ["ServiceNow", "Python", "Stripe", "Google Calendar API", "Google Meet"],
+    proof: [],
+    slides: [
+      { id: "workflow", label: "Workflow orchestration", kind: "html", component: PrimaryProductVisual },
+      { id: "dashboard-3", label: "Dashboard 3", kind: "image", src: carequillDashboard3.src, alt: "Carequill AI dashboard, view 3", fit: "contain" },
+      { id: "routing", label: "Responsibility routing", kind: "html", component: AlternateProductVisual },
+      { id: "dashboard-1", label: "Dashboard 1", kind: "image", src: carequillDashboard1.src, alt: "Carequill AI dashboard, view 1", fit: "contain" },
+      // { id: "dashboard-2", label: "Dashboard 2", kind: "image", src: carequillDashboard2.src, alt: "Carequill AI dashboard, view 2", fit: "contain" },
+      // { id: "calendar", label: "Calendar", kind: "image", src: carequillCalendar.src, alt: "Carequill AI calendar", fit: "contain" },
     ],
   },
   // FlowFree is temporarily hidden. Uncomment to restore it as the last product.
@@ -103,7 +128,7 @@ const products: PortfolioProduct[] = [
   //     { id: "chat", label: "Private conversation", kind: "html", component: PrimaryProductVisual },
   //     { id: "home", label: "Your space", kind: "html", component: AlternateProductVisual },
   //   ],
-  //   number: "04",
+  //   number: "05",
   //   name: "FlowFree",
   //   shortName: "FlowFree",
   //   category: "Mental wellbeing",
@@ -118,6 +143,7 @@ const products: PortfolioProduct[] = [
 ];
 
 function ProductMark({ id }: { id: ProductId }) {
+  if (id === "carequill") return <Workflow className="size-3" />;
   if (id === "gum") return <Gamepad2 className="size-3" />;
   if (id === "flowfree" || id === "giving") return <HeartHandshake className="size-3" />;
   return <Leaf className="size-3" />;
@@ -126,6 +152,25 @@ function ProductMark({ id }: { id: ProductId }) {
 function PrimaryProductVisual({ product }: { product: PortfolioProduct }) {
   return (
     <>
+      {product.id === "carequill" && (
+    <div className="relative z-10 mx-auto my-3 w-[90%] max-w-64 -rotate-1 rounded-2xl border border-[#e7e1d9] bg-[#fbfaf7] p-4 text-stone-600 shadow-lg">
+      <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+        <span className="font-display text-base text-[#705144]">Carequill AI</span>
+        <Workflow className="size-4 text-[#705144]" />
+      </div>
+      <h3 className="mt-3 text-lg font-semibold leading-tight">Care, coordinated.</h3>
+      <p className="mt-1 text-[10px] text-stone-500">From intake to the right next action.</p>
+      <ol className="mt-4 space-y-2">
+        {["Capture workflow event", "Evaluate risk and priority", "Route to the responsible team", "Monitor SLA and escalation"].map((label, index) => (
+          <li key={label} className="flex items-center gap-2 rounded-lg bg-[#f1eee8] p-2 text-[10px]">
+            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#e5d8c9] text-[#705144]">{index + 1}</span>
+            {label}
+          </li>
+        ))}
+      </ol>
+      <p className="mt-3 text-[9px] uppercase tracking-wider text-stone-500">Illustrative workflow study</p>
+    </div>
+      )}
       {product.id === "gum" && (
         <div className="relative z-10 mx-auto my-3 flex min-h-44 w-[88%] max-w-64 -rotate-2 flex-col justify-between overflow-hidden bg-[#705144] p-4 text-[#f8f7f5] shadow-[0_18px_35px_rgba(53,39,31,.18)] sm:min-h-52 sm:p-5">
           <span className="text-[9px] uppercase tracking-[.17em] text-[#ead9c9]">A little indie game</span>
@@ -149,7 +194,7 @@ function PrimaryProductVisual({ product }: { product: PortfolioProduct }) {
 
       {product.id === "rendesco" && (
         <div className="relative z-10 mx-auto my-3 w-[90%] max-w-64 -rotate-1 rounded-xl border border-[#e0dacf] bg-[#fbfaf7] p-3 shadow-[0_18px_35px_rgba(53,39,31,.13)] sm:p-4">
-          <div className="flex items-center justify-between"><div><span className="text-[9px] uppercase tracking-[.15em] text-[#8c8278]">Your home</span><p className="mt-1 font-display text-base text-ink">Energy overview</p></div><span className="grid size-7 place-items-center rounded-full bg-[#e8eee5] text-[#61755e]"><Leaf className="size-3" /></span></div>
+          <div className="flex items-center justify-between"><div><span className="text-[9px] uppercase tracking-[.15em] text-[#8c8278]">Your home</span><p className="mt-1 font-display text-base text-ink dark:text-stone-600">Energy overview</p></div><span className="grid size-7 place-items-center rounded-full bg-[#e8eee5] text-[#61755e]"><Leaf className="size-3" /></span></div>
           <div className="my-4 flex h-18 items-end gap-1.5 border-b border-[#e5dfd7] px-1.5 sm:h-20">{[38, 60, 47, 77, 54, 88, 64, 75, 48, 67, 91, 58].map((height, index) => <span key={index} className="flex-1 rounded-t-sm bg-[#8aa180]/80" style={{ height: `${height}%` }} />)}</div>
           <div className="grid grid-cols-3 gap-1.5 text-center">{["Solar", "EV", "Heating"].map((item) => <div key={item} className="rounded-md bg-[#f1eee8] px-1.5 py-2 text-[10px] text-[#5f6558]">{item}</div>)}</div>
           <p className="mb-0 mt-3 text-[9px] uppercase tracking-[.12em] text-[#92877e]">Illustrative interface study</p>
@@ -159,7 +204,7 @@ function PrimaryProductVisual({ product }: { product: PortfolioProduct }) {
       {product.id === "giving" && (
         <div className="relative z-10 mx-auto my-3 w-[90%] max-w-64 rotate-1 rounded-2xl border border-[#e7e1d9] bg-[#fbfaf7] p-3 shadow-[0_18px_35px_rgba(53,39,31,.13)] sm:p-4">
           <span className="text-[9px] uppercase tracking-[.15em] text-[#8c8278]">Give a little good</span>
-          <h3 className="mb-3 mt-1.5 font-display text-lg leading-tight text-ink">Choose a cause<br /><em className="text-brand">close to your heart.</em></h3>
+          <h3 className="mb-3 mt-1.5 font-display text-lg leading-tight text-ink dark:text-stone-600">Choose a cause<br /><em className="text-brand dark:text-stone-600">close to your heart.</em></h3>
           <div className="space-y-2">{["Community care", "Young people", "Local environment"].map((item, index) => <div key={item} className="flex items-center gap-2 rounded-lg border border-[#ece7e0] p-2"><span className={`grid size-6 place-items-center rounded-full ${index === 0 ? "bg-[#eaded1] text-brand" : "bg-[#f1eee8] text-[#81756c]"}`}><HeartHandshake className="size-3" /></span><span className="text-[10px] text-[#504943]">{item}</span><ArrowRight className="ml-auto size-2 text-[#9c8c7f]" /></div>)}</div>
           <p className="mb-0 mt-3 text-[9px] uppercase tracking-[.12em] text-[#92877e]">Illustrative interface study</p>
         </div>
@@ -170,6 +215,25 @@ function PrimaryProductVisual({ product }: { product: PortfolioProduct }) {
 }
 
 function AlternateProductVisual({ product }: { product: PortfolioProduct }) {
+  if (product.id === "carequill") return (
+    <div className="relative z-10 mx-auto my-3 w-[90%] max-w-64 rotate-1 rounded-2xl border border-[#e7e1d9] bg-[#fbfaf7] p-4 text-stone-600 shadow-lg">
+      <span className="text-[9px] uppercase tracking-wider text-[#705144]">Carequill AI · Responsibility routing</span>
+      <h3 className="mt-3 text-lg font-semibold leading-tight">Every event.<br />A clear next step.</h3>
+      <div className="mt-4 space-y-2">
+        {[
+          ["Payment webhook", "Validate → process once → update state"],
+          ["Scheduling event", "Calendar → meeting → workflow update"],
+          ["Risk threshold", "Prioritise → assign → escalate"],
+        ].map(([title, detail]) => (
+          <div key={title} className="rounded-lg border border-stone-200 p-2.5">
+            <strong className="block text-xs font-medium">{title}</strong>
+            <span className="mt-1 block text-[10px] text-stone-500">{detail}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[9px] uppercase tracking-wider text-stone-500">Illustrative routing study</p>
+    </div>
+  );
   const common = "relative z-10 mx-auto my-3 w-[90%] max-w-64 rounded-2xl border border-[#e7e1d9] bg-[#fbfaf7] p-4 shadow-[0_18px_35px_rgba(53,39,31,.13)] sm:p-5";
   if (product.id === "gum") return (
     <div className={`${common} rotate-2`}>
@@ -311,16 +375,23 @@ function ProductPanel({ product }: { product: PortfolioProduct }) {
             </a>
           </div>
         ) : null}
-        <div className="mt-4">
-          <h4 className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-[#705144] dark:text-[#d1ad98]">Tools & technologies</h4>
-          <div className="flex flex-wrap gap-1.5">{product.technologies.map((tech) => <span key={tech} className="rounded-full border border-[#dfd6cd] bg-[#fffdfa] px-2.5 py-1.5 text-[10px] text-[#5e5650] dark:border-[#554940] dark:bg-[#28231f] dark:text-[#e7ddd5]">{tech}</span>)}</div>
-        </div>
-        <div className="mt-auto grid grid-cols-2 gap-2 border-t border-[#ded7ce] pt-4 sm:mt-6">
+        {[
+          { label: "Architecture", items: product.architecture },
+          { label: product.id === "carequill" ? "Technology" : "Tools & technologies", items: product.technologies },
+        ].map(group => group.items?.length ? (
+          <div key={group.label} className="mt-4">
+            <h4 className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-[#705144] dark:text-[#d1ad98]">{group.label}</h4>
+            <div className="flex flex-wrap gap-1.5">{group.items.map(item => (
+              <span key={item} className="rounded-full border border-[#dfd6cd] bg-[#fffdfa] px-2.5 py-1.5 text-[10px] text-[#5e5650] dark:border-[#554940] dark:bg-[#28231f] dark:text-[#e7ddd5]">{item}</span>
+            ))}</div>
+          </div>
+        ) : null)}
+        {product.proof.length > 0 ? <div className="mt-auto grid grid-cols-2 gap-2 border-t border-[#ded7ce] pt-4 sm:mt-6">
           {product.proof.map((item) => <div key={item.label} className="min-h-16 bg-[#fffdfa]/75 p-3 dark:bg-[#28231f]">
             <strong className="block text-base font-semibold leading-tight tracking-[-.035em] text-[#705144] dark:text-[#d1ad98]">{item.value}</strong>
             <span className="mt-1.5 block text-[10px] leading-relaxed text-[#706c67] dark:text-[#c6bcb4]">{item.label}</span>
           </div>)}
-        </div>
+        </div> : null}
       </div>
     </motion.div>
   );
