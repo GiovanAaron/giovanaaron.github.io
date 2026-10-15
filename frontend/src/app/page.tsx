@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import AboutMe from "@/components/about-me";
+import ProductsSection from "@/components/ProductsSection";
 import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -61,8 +62,11 @@ const techStackBackgrounds = [
   "bg-[#D4AF37]/15",
 ];
 
+type PortfolioView = "home" | "about" | "products";
+
 export default function Home() {
-  const [isAboutActive, setIsAboutActive] = useState(false);
+  const [activeView, setActiveView] = useState<PortfolioView>("home");
+  const isAboutActive = activeView === "about";
   const reduceMotion = useReducedMotion();
   const sectionTransition = {
     duration: reduceMotion ? 0 : 0.6,
@@ -75,7 +79,7 @@ export default function Home() {
       <header className="relative z-30 mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-14">
         <a
           href="#"
-          onClick={() => setIsAboutActive(false)}
+          onClick={() => setActiveView("home")}
           className="flex items-center gap-3"
           aria-label="Studio home"
         >
@@ -91,14 +95,14 @@ export default function Home() {
             className="hidden items-center gap-8 text-sm md:flex"
             aria-label="Main navigation"
           >
-            <a href="#home" onClick={() => setIsAboutActive(false)} aria-current={!isAboutActive ? "page" : undefined} className={`transition-colors hover:text-foreground ${!isAboutActive ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}>
+            <a href="#home" onClick={() => setActiveView("home")} aria-current={activeView === "home" ? "page" : undefined} className={`transition-colors hover:text-foreground ${activeView === "home" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}>
               Home
             </a>
              <a
               href="#about-me"
               onClick={(event) => {
                 event.preventDefault();
-                setIsAboutActive(true);
+                setActiveView("about");
               }}
               aria-current={isAboutActive ? "page" : undefined}
               className={`transition-colors hover:text-foreground ${isAboutActive ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}
@@ -106,10 +110,13 @@ export default function Home() {
               About Me
             </a>
             <a
-              href="https://resisted-spoonbill-670.notion.site/Portfolio-bfa495d566854989923f98ff4c09b764"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#products"
+              onClick={(event) => {
+                event.preventDefault();
+                setActiveView("products");
+              }}
+              aria-current={activeView === "products" ? "page" : undefined}
+              className={`transition-colors hover:text-foreground ${activeView === "products" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}
             >
               Products
             </a>
@@ -125,16 +132,34 @@ export default function Home() {
         </div>
       </header>
 
-      <AnimatePresence mode="wait" initial={false}>
-      {!isAboutActive ? (
-      <motion.div key="home-view" exit="exit">
+      <AnimatePresence mode="wait" initial={false} custom={activeView}>
+      {activeView === "home" ? (
+      <motion.div
+        key="home-view"
+        exit="exit"
+        variants={{
+          exit: (destination: PortfolioView) => ({
+            opacity: destination === "products" ? 0 : 1,
+            transition: { duration: reduceMotion ? 0 : 0.25 },
+          }),
+        }}
+      >
       <motion.section
         initial={{ x: "-100vw", opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        exit={{ x: reduceMotion ? 0 : "-100vw", opacity: 0 }}
+        exit="exit"
+        variants={{
+          exit: (destination: PortfolioView) => ({
+            x: reduceMotion || destination === "products" ? 0 : "-100vw",
+            opacity: 0,
+            transition: destination === "products"
+              ? { duration: reduceMotion ? 0 : 0.25, delay: 0 }
+              : sectionTransition,
+          }),
+        }}
         transition={sectionTransition}
-        inert={isAboutActive}
-        aria-hidden={isAboutActive}
+        inert={activeView !== "home"}
+        aria-hidden={activeView !== "home"}
         className="relative mx-auto grid min-h-[610px] w-full max-w-[1440px] lg:grid-cols-[52%_48%]"
         id="home"
       >
@@ -263,12 +288,21 @@ export default function Home() {
       <motion.section
         initial={{ x: "100vw", opacity: 0 }}
         animate={{ x: 0, opacity: 0.8 }}
-        exit={{ x: reduceMotion ? 0 : "100vw", opacity: 0 }}
+        exit="exit"
+        variants={{
+          exit: (destination: PortfolioView) => ({
+            x: reduceMotion || destination === "products" ? 0 : "100vw",
+            opacity: 0,
+            transition: destination === "products"
+              ? { duration: reduceMotion ? 0 : 0.25, delay: 0 }
+              : { ...sectionTransition, delay: reduceMotion ? 0 : 0.08 },
+          }),
+        }}
         transition={{ ...sectionTransition, delay: reduceMotion ? 0 : 0.08 }}
-        inert={isAboutActive}
-        aria-hidden={isAboutActive}
+        inert={activeView !== "home"}
+        aria-hidden={activeView !== "home"}
         className="mx-auto w-full max-w-[1440px] px-5 pt-14 pb-12 text-center opacity-80 sm:px-8 lg:pt-0.5"
-        id="products"
+        id="trusted-companies"
       >
         <p className="text-muted-foreground text-sm italic">
           Trusted by These Great Companies
@@ -293,12 +327,21 @@ export default function Home() {
         </div>
       </motion.section>
       </motion.div>
-      ) : (
+      ) : activeView === "about" ? (
       <motion.section
         key="about-view"
         initial={{ x: reduceMotion ? 0 : "100vw", opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        exit={{ x: reduceMotion ? 0 : "100vw", opacity: 0 }}
+        exit="exit"
+        variants={{
+          exit: (destination: PortfolioView) => ({
+            x: reduceMotion || destination === "products" ? 0 : "100vw",
+            opacity: 0,
+            transition: destination === "products"
+              ? { duration: reduceMotion ? 0 : 0.25 }
+              : sectionTransition,
+          }),
+        }}
         transition={sectionTransition}
         className="mx-auto w-full pt-8 pb-12 text-left sm:pt-10"
         id="about-me"
@@ -309,7 +352,7 @@ export default function Home() {
         <div className="mx-auto  flex w-full max-w-[1440px] justify-start px-5 sm:px-8 lg:px-14">
           <button
             type="button"
-            onClick={() => setIsAboutActive(false)}
+            onClick={() => setActiveView("home")}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <ArrowLeft className="size-4" />
@@ -317,6 +360,27 @@ export default function Home() {
           </button>
         </div>
         
+      </motion.section>
+      ) : (
+      <motion.section
+        key="products-view"
+        initial={{ y: reduceMotion ? 0 : "100vh", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: reduceMotion ? 0 : "100vh", opacity: 0 }}
+        transition={sectionTransition}
+        className="mx-auto w-full pt-0 pb-12 sm:pt-0"
+      >
+        <ProductsSection />
+        <div className="mx-auto flex w-full max-w-[1440px] justify-start px-5 sm:px-8 lg:px-14">
+          <button
+            type="button"
+            onClick={() => setActiveView("home")}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            <ArrowLeft className="size-4" />
+            Back to home
+          </button>
+        </div>
       </motion.section>
       )}
       </AnimatePresence>
