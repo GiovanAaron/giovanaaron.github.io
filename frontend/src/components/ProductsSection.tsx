@@ -1,6 +1,6 @@
 import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HeartHandshake, Leaf, Workflow } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import gumHome from "@/assets/case_studies/dont_touch_my_gum_home.svg";
 import gumCode from "@/assets/case_studies/dont_touch_my_gum_code.gif";
@@ -108,7 +108,7 @@ const products: PortfolioProduct[] = [
     shortName: "Carequill AI",
     cta: { label: "Book consultation", href: "https://calendar.app.google/eE5FcZnghkSBCSpH8" },
     category: "Healthcare SAAS",
-    description: "A full-stack healthcare SaaS product translating operational requirements into clear interfaces, relational data models and automated workflows. ServiceNow orchestration and a Python service layer connect risk prioritisation and responsibility routing with payments and scheduling APIs, supported by audit trails and escalation monitoring.",
+    description: "Private clinics often coordinate patient enquiries, appointments, payments and follow-ups across disconnected systems, making it difficult to identify stalled patients, unanswered messages and unclear ownership. This full-stack healthcare SaaS product brings those workflows into one operational view, translating clinic requirements into clear interfaces, relational data models and automated workflows. ServiceNow orchestration and a Python service layer connect risk prioritisation and responsibility routing with payment and scheduling APIs, supported by audit trails and escalation monitoring.",
     architecture: ["Event-Driven Systems", "Rules Engines", "State Machines", "Webhook Processing", "Role-Based Workflows", "Risk Prioritisation", "Audit Trails"],
     technologies: ["ServiceNow", "Python", "Stripe", "Google Calendar API", "Google Meet"],
     proof: [],
@@ -303,10 +303,29 @@ function ProductSlideVisual({ slide, product }: { slide: ProductSlide; product: 
 
 function ProductArtwork({ product }: { product: PortfolioProduct }) {
   const [activeSlide, setActiveSlide] = useState(0);
+  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reduceMotion = useReducedMotion();
   const slideCount = product.slides.length;
   const slide = product.slides[activeSlide] ?? product.slides[0];
+  // ProductPanel is keyed by product ID, so each selection starts a fresh timer.
+  useEffect(() => {
+    if (slideCount < 2) return;
+    autoAdvanceRef.current = setTimeout(() => {
+      autoAdvanceRef.current = null;
+      setActiveSlide(1);
+    }, 5000);
+    return () => {
+      if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
+      autoAdvanceRef.current = null;
+    };
+  }, [product.id, slideCount]);
+
+  function cancelAutoAdvance() {
+    if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
+    autoAdvanceRef.current = null;
+  }
   function moveSlide(direction: number) {
+    cancelAutoAdvance();
     setActiveSlide(current => (current + direction + slideCount) % slideCount);
   }
   return (
@@ -335,7 +354,7 @@ function ProductArtwork({ product }: { product: PortfolioProduct }) {
             </button>
             <div className="flex min-w-0 items-center gap-1 overflow-x-auto px-1">
               {product.slides.map((item, index) => (
-                <button key={item.id} type="button" aria-label={`Show ${item.label}, ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => setActiveSlide(index)} className="flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary">
+                <button key={item.id} type="button" aria-label={`Show ${item.label}, ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => { cancelAutoAdvance(); setActiveSlide(index); }} className="flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary">
                   <span className={`h-2 rounded-full transition-all duration-200 ${activeSlide === index ? "w-4 bg-[#705144] dark:bg-[#d1ad98]" : "w-2 bg-[#b6a99c] hover:bg-[#705144]/70"}`} />
                 </button>
               ))}
