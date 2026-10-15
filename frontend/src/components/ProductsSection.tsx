@@ -1,11 +1,23 @@
-import { ArrowRight, ArrowUpRight, Gamepad2, HeartHandshake, Leaf } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HeartHandshake, Leaf } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import gumHome from "@/assets/case_studies/dont_touch_my_gum_home.svg";
+import gumCode from "@/assets/case_studies/dont_touch_my_gum_code.gif";
+import gumMusicProduction from "@/assets/case_studies/dont_touch_my_gum_musicprod.png";
+import rendescoPrototype from "@/assets/case_studies/rendesco_protoype.svg";
 
 type ProductId = "gum" | "flowfree" | "rendesco" | "giving";
 
 type ProductProof = { value: string; label: string };
+
+type ProductSlide = {
+  id: string;
+  label: string;
+} & (
+  | { kind: "html"; component: ComponentType<{ product: PortfolioProduct }> }
+  | { kind: "image"; src: string; alt: string; fit?: "contain" | "cover"; caption?: string }
+);
 
 type PortfolioProduct = {
   id: ProductId;
@@ -14,13 +26,22 @@ type PortfolioProduct = {
   shortName: string;
   category: string;
   description: string;
+  cta?: { label: string; href: string };
   technologies: string[];
   proof: ProductProof[];
+  slides: [ProductSlide, ...ProductSlide[]];
 };
 
 const products: PortfolioProduct[] = [
   {
     id: "gum",
+    slides: [
+      { id: "game", label: "Game artwork", kind: "html", component: PrimaryProductVisual },
+      { id: "home", label: "Home screen", kind: "image", src: gumHome.src, alt: "Don’t Touch My Gum! home screen", fit: "contain" },
+      { id: "code", label: "Game code", kind: "image", src: gumCode.src, alt: "Animated view of the Don’t Touch My Gum! code", fit: "contain" },
+      { id: "levels", label: "Level select", kind: "html", component: AlternateProductVisual },
+      { id: "music-production", label: "Music production", kind: "image", src: gumMusicProduction.src, alt: "Music production for Don’t Touch My Gum!", fit: "contain" },
+    ],
     number: "01",
     name: "Don’t Touch My Gum!",
     shortName: "Don’t Touch My Gum!",
@@ -32,9 +53,14 @@ const products: PortfolioProduct[] = [
       { value: "44", label: "peak concurrent players" },
       { value: "Featured", label: "in the PyGame WebAssembly Collection" },
     ],
+    cta: { label: "Play Now", href: "https://giovanaaron.itch.io/dont-touch-my-gum-cv" },
   },
   {
     id: "flowfree",
+    slides: [
+      { id: "chat", label: "Private conversation", kind: "html", component: PrimaryProductVisual },
+      { id: "home", label: "Your space", kind: "html", component: AlternateProductVisual },
+    ],
     number: "02",
     name: "FlowFree",
     shortName: "FlowFree",
@@ -48,9 +74,15 @@ const products: PortfolioProduct[] = [
   },
   {
     id: "rendesco",
+    slides: [
+      { id: "overview", label: "Energy overview", kind: "html", component: PrimaryProductVisual },
+      { id: "prototype", label: "HEMS prototype", kind: "image", src: rendescoPrototype.src, alt: "Rendesco home energy management prototype", fit: "contain" },
+      { id: "solar", label: "Solar generation", kind: "html", component: AlternateProductVisual },
+    ],
     number: "03",
     name: "Home Energy Management",
-    shortName: "Rendesco HEMS",
+    shortName: "Rendesco Flow",
+    cta: { label: "Learn more", href: "https://www.rendesco.com/rendescocare" },
     category: "Clean energy",
     description: "A customer-facing energy app shaped around household solar, electric vehicle and heat-pump data. I contributed to mobile interface design and supporting APIs.",
     technologies: ["React Native", "FastAPI", "Azure", "PostgreSQL"],
@@ -61,6 +93,10 @@ const products: PortfolioProduct[] = [
   },
   {
     id: "giving",
+    slides: [
+      { id: "causes", label: "Choose a cause", kind: "html", component: PrimaryProductVisual },
+      { id: "confirmation", label: "Donation confirmation", kind: "html", component: AlternateProductVisual },
+    ],
     number: "04",
     name: "Unify Giving",
     shortName: "Unify Giving",
@@ -163,30 +199,82 @@ function AlternateProductVisual({ product }: { product: PortfolioProduct }) {
   );
 }
 
+function ProductImageVisual({ slide }: { slide: Extract<ProductSlide, { kind: "image" }> }) {
+  const [hasError, setHasError] = useState(false);
+  return (
+    <figure className="mx-auto my-3 w-full max-w-sm lg:absolute lg:left-1/2 lg:top-1/2 lg:my-0 lg:w-[115%] lg:max-w-none lg:-translate-x-1/2 lg:-translate-y-1/2">
+      {hasError ? (
+        <div role="status" className="bg-background/70 text-muted-foreground flex aspect-[4/3] items-center justify-center rounded-lg p-4 text-center text-xs">
+          Image unavailable: {slide.alt}
+        </div>
+      ) : (
+        // Source images intentionally use native img alongside the HTML/CSS slides.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={slide.src}
+          alt={slide.alt}
+          loading="lazy"
+          decoding="async"
+          onError={() => setHasError(true)}
+          className={`mx-auto aspect-[4/3] w-full max-w-[90%] rounded-lg lg:aspect-auto lg:h-80 ${slide.fit === "cover" ? "object-cover" : "object-contain"}`}
+        />
+      )}
+      {slide.caption ? <figcaption className="text-muted-foreground mt-2 text-center text-[10px]">{slide.caption}</figcaption> : null}
+    </figure>
+  );
+}
+
+function ProductSlideVisual({ slide, product }: { slide: ProductSlide; product: PortfolioProduct }) {
+  if (slide.kind === "image") return <ProductImageVisual slide={slide} />;
+  const Visual = slide.component;
+  return <Visual product={product} />;
+}
+
 function ProductArtwork({ product }: { product: PortfolioProduct }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const reduceMotion = useReducedMotion();
-  const slideCount = 2;
+  const slideCount = product.slides.length;
+  const slide = product.slides[activeSlide] ?? product.slides[0];
+  function moveSlide(direction: number) {
+    setActiveSlide(current => (current + direction + slideCount) % slideCount);
+  }
   return (
-    <div className="relative flex min-h-64 flex-col justify-between overflow-hidden bg-[#eee7df] p-4 sm:min-h-80 sm:p-5 dark:bg-[#29231f]">
+    <div role="region" aria-roledescription="carousel" aria-label={`${product.name} visuals`} className={`relative flex min-h-64 flex-col justify-between bg-[#eee7df] p-4 sm:min-h-80 sm:p-5 dark:bg-[#29231f] ${slide.kind === "image" ? "overflow-hidden lg:overflow-visible" : "overflow-hidden"}`}>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute -right-12 -top-14 size-36 rounded-full border border-white/60 sm:size-48" />
       <div className="absolute -bottom-20 -left-16 size-40 rounded-full border border-white/50 sm:size-56" />
-      <div className="relative z-10 flex items-start justify-between gap-3">
+      </div>
+      <div className="relative z-20 flex items-start justify-between gap-3">
         <span className="text-[9px] font-bold uppercase tracking-[.16em] text-[#705144] dark:text-[#d1ad98]">Product visual study</span>
         <span className="grid size-7 shrink-0 place-items-center rounded-full border border-[#705144]/20 bg-[#f8f7f5]/70 text-[#705144] dark:bg-[#29231f] dark:text-[#d1ad98]"><ProductMark id={product.id} /></span>
       </div>
       <div className="relative z-10 flex flex-1 items-center justify-center">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={`${product.id}-${activeSlide}`} className="w-full" initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 22, scale: 0.98 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -22, scale: 0.98 }} transition={{ duration: 0.28, ease: "easeOut" }}>
-            {activeSlide === 0 ? <PrimaryProductVisual product={product} /> : <AlternateProductVisual product={product} />}
+          <motion.div key={`${product.id}-${slide.id}`} role="group" aria-roledescription="slide" aria-label={`${activeSlide + 1} of ${slideCount}: ${slide.label}`} className={`w-full ${slide.kind === "image" ? "lg:relative lg:min-h-64" : ""}`} initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 22, scale: 0.98 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -22, scale: 0.98 }} transition={{ duration: reduceMotion ? 0 : 0.28, ease: "easeOut" }}>
+            <ProductSlideVisual slide={slide} product={product} />
           </motion.div>
         </AnimatePresence>
       </div>
-      <div className="relative z-10 flex items-center justify-between gap-3">
+      <div className="relative z-20 flex flex-wrap items-center justify-between gap-3">
         <span className="text-[10px] uppercase tracking-[.14em] text-[#706c67] dark:text-[#c6bcb4]">{product.number} / 04 · {product.category}</span>
-        <div className="flex items-center gap-1.5" role="group" aria-label={`${product.name} images`}>
-          {Array.from({ length: slideCount }, (_, index) => <button key={index} type="button" aria-label={`Show ${product.name} image ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => setActiveSlide(index)} className={`h-2 rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#705144] focus-visible:ring-offset-2 ${activeSlide === index ? "w-4 bg-[#705144] dark:bg-[#d1ad98]" : "w-2 bg-[#b6a99c] hover:bg-[#705144]/70"}`} />)}
-        </div>
+        {slideCount > 1 ? (
+          <div className="flex min-w-0 max-w-full items-center gap-1" role="group" aria-label={`${product.name} slide controls`}>
+            <button type="button" aria-label="Previous slide" onClick={() => moveSlide(-1)} className="text-primary flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-background/60 focus-visible:outline-2 focus-visible:outline-primary">
+              <ChevronLeft className="size-3" />
+            </button>
+            <div className="flex min-w-0 items-center gap-1 overflow-x-auto px-1">
+              {product.slides.map((item, index) => (
+                <button key={item.id} type="button" aria-label={`Show ${item.label}, ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => setActiveSlide(index)} className="flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary">
+                  <span className={`h-2 rounded-full transition-all duration-200 ${activeSlide === index ? "w-4 bg-[#705144] dark:bg-[#d1ad98]" : "w-2 bg-[#b6a99c] hover:bg-[#705144]/70"}`} />
+                </button>
+              ))}
+            </div>
+            <button type="button" aria-label="Next slide" onClick={() => moveSlide(1)} className="text-primary flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-background/60 focus-visible:outline-2 focus-visible:outline-primary">
+              <ChevronRight className="size-3" />
+            </button>
+          </div>
+        ) : null}
+        <span className="sr-only" aria-live="polite" aria-atomic="true">Slide {activeSlide + 1} of {slideCount}: {slide.label}</span>
       </div>
     </div>
   );
@@ -203,6 +291,19 @@ function ProductPanel({ product }: { product: PortfolioProduct }) {
         </div>
         <h3 className="mb-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-semibold leading-[1] tracking-[-.065em] text-[#22201e] dark:text-[#f5f0eb]">{product.name}</h3>
         <p className="mb-0 mt-4 text-xs leading-[1.8] text-[#706c67] dark:text-muted-foreground lg:text-sm">{product.description}</p>
+        {product.cta ? (
+          <div className="mt-4">
+            <a
+              href={product.cta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-primary text-primary-foreground inline-flex min-h-10 items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold opacity-80 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            >
+              {product.cta.label}
+              <ArrowUpRight className="size-3" aria-hidden="true" />
+            </a>
+          </div>
+        ) : null}
         <div className="mt-4">
           <h4 className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-[#705144] dark:text-[#d1ad98]">Tools & technologies</h4>
           <div className="flex flex-wrap gap-1.5">{product.technologies.map((tech) => <span key={tech} className="rounded-full border border-[#dfd6cd] bg-[#fffdfa] px-2.5 py-1.5 text-[10px] text-[#5e5650] dark:border-[#554940] dark:bg-[#28231f] dark:text-[#e7ddd5]">{tech}</span>)}</div>
