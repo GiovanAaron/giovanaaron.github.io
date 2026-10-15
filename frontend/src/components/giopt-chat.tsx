@@ -4,9 +4,12 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { ArrowUp, LoaderCircle, RotateCcw, Sparkles } from "lucide-react";
 import { VisitorOnboarding } from "@/components/visitor-onboarding";
 import { TypingResponse } from "@/components/typing-response";
+import { ApiUsageMeter } from "@/components/api-usage-meter";
+import { reserveApiCall } from "@/lib/giopt/api-usage";
 import { useVisitor } from "@/components/visitor-provider";
 import { presetAnswers } from "@/data/giopt/answers";
 import { answerQuestion } from "@/lib/giopt/answer-question";
+import { formatResponseText } from "@/lib/giopt/format-response-text";
 import { setAvatarThinking } from "@/lib/avatar-state";
 import type { GioPTMessage, PortfolioLink } from "@/types/giopt";
 import type { VisitorProfile } from "@/types/visitor";
@@ -57,6 +60,7 @@ export function GioPTChat() {
     try {
       const response = await answerQuestion(question, presetAnswers, profile, {
         messages: historyRef.current, signal: controller.signal,
+        beforeApiRequest: () => reserveApiCall(controller.signal),
       });
       if (controller.signal.aborted) return;
       if (response.source === "preset" || response.intent) {
@@ -125,6 +129,7 @@ export function GioPTChat() {
         </div>
         <button type="button" onClick={resetChat} aria-label="Start a new chat" title="New chat" className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 focus-visible:outline-2 focus-visible:outline-primary"><RotateCcw className="size-4" /></button>
       </div>
+      <ApiUsageMeter />
       <div ref={transcriptRef} role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions"
         onScroll={event => {
           const transcript = event.currentTarget;
@@ -141,7 +146,7 @@ export function GioPTChat() {
                     setTypingMessageId(null);
                     inputRef.current?.focus({ preventScroll: true });
                   }} />
-              ) : <p className="whitespace-pre-wrap break-words">{message.content}</p>}
+              ) : <p className="whitespace-pre-wrap break-words">{message.role === "assistant" ? formatResponseText(message.content) : message.content}</p>}
               {typingMessageId !== message.id && message.links?.length ? <ul className="mt-3 space-y-1">{message.links.map(link => <li key={link.href}><a href={link.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">{link.label}</a></li>)}</ul> : null}
             </div>
           </div>

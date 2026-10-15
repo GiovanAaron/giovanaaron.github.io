@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
+import { formatResponseText, parseResponseText } from "@/lib/giopt/format-response-text";
 
 const CHARACTER_INTERVAL_MS = 12;
 
@@ -10,7 +11,7 @@ export function TypingResponse({ text, onComplete, onProgress }: {
   onComplete: () => void;
   onProgress: () => void;
 }) {
-  const characters = useMemo(() => Array.from(text), [text]);
+  const characters = useMemo(() => Array.from(parseResponseText(text).map(part => part.text).join("")), [text]);
   const [visibleCount, setVisibleCount] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reduceMotion = useReducedMotion();
@@ -48,9 +49,9 @@ export function TypingResponse({ text, onComplete, onProgress }: {
   return (
     <>
       {/* Announce the full response once, instead of each animated character. */}
-      <p className="sr-only">{text}</p>
+      <p className="sr-only">{formatResponseText(text)}</p>
       <p aria-hidden="true" className="whitespace-pre-wrap break-words">
-        {reduceMotion ? text : characters.slice(0, visibleCount).join("")}
+        {formatResponseText(text, reduceMotion ? Infinity : visibleCount)}
         <span className="bg-current ml-0.5 inline-block h-4 w-0.5 animate-pulse align-middle motion-reduce:animate-none" />
       </p>
       <button type="button" onClick={showFullAnswer}

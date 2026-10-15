@@ -6,6 +6,7 @@ type AnswerOptions = {
   endpoint?: string
   messages?: GioPTMessage[]
   signal?: AbortSignal
+  beforeApiRequest?: () => boolean | Promise<boolean>
 }
 
 // The backend owns OpenAI integration; the browser only knows this API contract.
@@ -17,6 +18,14 @@ export async function answerQuestion(
 ): Promise<ChatGioPTResponse> {
   const local = resolveQuestion(question, presets, context)
   if (local.intent || local.source === "preset") return local
+  if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError")
+  if (options.beforeApiRequest && !(await options.beforeApiRequest())) {
+    return {
+      ...local,
+      answer: "You’ve reached your AI response limit. Please try again later.",
+    }
+  }
+  if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError")
 
   console.log("answerQuestion: sending request to backend API")
   const body: GioPTApiRequest = {
