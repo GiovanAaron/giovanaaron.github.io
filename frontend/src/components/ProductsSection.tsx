@@ -6,6 +6,8 @@ import gumHome from "@/assets/case_studies/dont_touch_my_gum_home.svg";
 import gumCode from "@/assets/case_studies/dont_touch_my_gum_code.gif";
 import gumMusicProduction from "@/assets/case_studies/dont_touch_my_gum_musicprod.png";
 import rendescoPrototype from "@/assets/case_studies/rendesco_protoype.svg";
+import rendescoFlowHome from "@/assets/case_studies/rendesco_flow_home_view.svg";
+import unifyGivingApp from "@/assets/case_studies/unify_giving_app.png";
 
 type ProductId = "gum" | "flowfree" | "rendesco" | "giving";
 
@@ -34,52 +36,14 @@ type PortfolioProduct = {
 
 const products: PortfolioProduct[] = [
   {
-    id: "gum",
-    slides: [
-      { id: "game", label: "Game artwork", kind: "html", component: PrimaryProductVisual },
-      { id: "home", label: "Home screen", kind: "image", src: gumHome.src, alt: "Don’t Touch My Gum! home screen", fit: "contain" },
-      { id: "code", label: "Game code", kind: "image", src: gumCode.src, alt: "Animated view of the Don’t Touch My Gum! code", fit: "contain" },
-      { id: "levels", label: "Level select", kind: "html", component: AlternateProductVisual },
-      { id: "music-production", label: "Music production", kind: "image", src: gumMusicProduction.src, alt: "Music production for Don’t Touch My Gum!", fit: "contain" },
-    ],
-    number: "01",
-    name: "Don’t Touch My Gum!",
-    shortName: "Don’t Touch My Gum!",
-    category: "Independent game",
-    description: "A desktop mini-game I took from idea to release, bringing together code, illustration, interface design and sound.",
-    technologies: ["Python", "PyGame", "Figma", "Procreate", "Ableton"],
-    proof: [
-      { value: "100+", label: "players in its first month" },
-      { value: "44", label: "peak concurrent players" },
-      { value: "Featured", label: "in the PyGame WebAssembly Collection" },
-    ],
-    cta: { label: "Play Now", href: "https://giovanaaron.itch.io/dont-touch-my-gum-cv" },
-  },
-  {
-    id: "flowfree",
-    slides: [
-      { id: "chat", label: "Private conversation", kind: "html", component: PrimaryProductVisual },
-      { id: "home", label: "Your space", kind: "html", component: AlternateProductVisual },
-    ],
-    number: "02",
-    name: "FlowFree",
-    shortName: "FlowFree",
-    category: "Mental wellbeing",
-    description: "An anonymous peer-support platform connecting employees with trained Champions. I worked on private chat, accessible journeys and real-time safety feedback.",
-    technologies: ["React", "Socket.IO", "FastAPI", "MongoDB"],
-    proof: [
-      { value: "Anonymous", label: "peer-support conversations" },
-      { value: "Real time", label: "moderation and safety feedback" },
-    ],
-  },
-  {
     id: "rendesco",
     slides: [
       { id: "overview", label: "Energy overview", kind: "html", component: PrimaryProductVisual },
       { id: "prototype", label: "HEMS prototype", kind: "image", src: rendescoPrototype.src, alt: "Rendesco home energy management prototype", fit: "contain" },
       { id: "solar", label: "Solar generation", kind: "html", component: AlternateProductVisual },
+      { id: "flow-home", label: "Flow home view", kind: "image", src: rendescoFlowHome.src, alt: "Rendesco Flow home view", fit: "contain" },
     ],
-    number: "03",
+    number: "01",
     name: "Home Energy Management",
     shortName: "Rendesco Flow",
     cta: { label: "Learn more", href: "https://www.rendesco.com/rendescocare" },
@@ -92,14 +56,38 @@ const products: PortfolioProduct[] = [
     ],
   },
   {
+    id: "gum",
+    slides: [
+      { id: "game", label: "Game artwork", kind: "html", component: PrimaryProductVisual },
+      { id: "home", label: "Home screen", kind: "image", src: gumHome.src, alt: "Don’t Touch My Gum! home screen", fit: "contain" },
+      { id: "code", label: "Game code", kind: "image", src: gumCode.src, alt: "Animated view of the Don’t Touch My Gum! code", fit: "contain" },
+      { id: "levels", label: "Level select", kind: "html", component: AlternateProductVisual },
+      { id: "music-production", label: "Music production", kind: "image", src: gumMusicProduction.src, alt: "Music production for Don’t Touch My Gum!", fit: "contain" },
+    ],
+    number: "02",
+    name: "Don’t Touch My Gum!",
+    shortName: "Don’t Touch My Gum!",
+    category: "Independent game",
+    description: "A desktop mini-game I took from idea to release, bringing together code, illustration, interface design and electronic music production.",
+    technologies: ["Python", "PyGame", "Figma", "Procreate", "Ableton"],
+    proof: [
+      { value: "100+", label: "players in its first month" },
+      { value: "44", label: "peak concurrent players" },
+      { value: "Featured", label: "in the PyGame WebAssembly Collection" },
+    ],
+    cta: { label: "Play Now", href: "https://giovanaaron.itch.io/dont-touch-my-gum-cv" },
+  },
+  {
     id: "giving",
     slides: [
       { id: "causes", label: "Choose a cause", kind: "html", component: PrimaryProductVisual },
+      { id: "app", label: "Unify Giving app", kind: "image", src: unifyGivingApp.src, alt: "Unify Giving mobile app", fit: "contain" },
       { id: "confirmation", label: "Donation confirmation", kind: "html", component: AlternateProductVisual },
     ],
-    number: "04",
+    number: "03",
     name: "Unify Giving",
     shortName: "Unify Giving",
+    cta: { label: "Learn more", href: "https://unifygiving.com/about/" },
     category: "Digital giving",
     description: "A mobile donation platform where I helped ship Stripe payments, improve API performance and refine the giving experience.",
     technologies: ["React Native", "Node.js", "PostgreSQL", "Stripe"],
@@ -108,6 +96,25 @@ const products: PortfolioProduct[] = [
       { value: "Stripe", label: "donations launched on mobile" },
     ],
   },
+  // FlowFree is temporarily hidden. Uncomment to restore it as the last product.
+  // {
+  //   id: "flowfree",
+  //   slides: [
+  //     { id: "chat", label: "Private conversation", kind: "html", component: PrimaryProductVisual },
+  //     { id: "home", label: "Your space", kind: "html", component: AlternateProductVisual },
+  //   ],
+  //   number: "04",
+  //   name: "FlowFree",
+  //   shortName: "FlowFree",
+  //   category: "Mental wellbeing",
+  //   description: "An anonymous peer-support platform connecting employees with trained Champions. I worked on private chat, accessible journeys and real-time safety feedback.",
+  //   technologies: ["React", "Socket.IO", "FastAPI", "MongoDB"],
+  //   proof: [
+  //     { value: "Anonymous", label: "peer-support conversations" },
+  //     { value: "Real time", label: "moderation and safety feedback" },
+  //   ],
+  // },
+
 ];
 
 function ProductMark({ id }: { id: ProductId }) {
@@ -256,7 +263,7 @@ function ProductArtwork({ product }: { product: PortfolioProduct }) {
         </AnimatePresence>
       </div>
       <div className="relative z-20 flex flex-wrap items-center justify-between gap-3">
-        <span className="text-[10px] uppercase tracking-[.14em] text-[#706c67] dark:text-[#c6bcb4]">{product.number} / 04 · {product.category}</span>
+        <span className="text-[10px] uppercase tracking-[.14em] text-[#706c67] dark:text-[#c6bcb4]">{product.number} / {String(products.length).padStart(2, "0")} · {product.category}</span>
         {slideCount > 1 ? (
           <div className="flex min-w-0 max-w-full items-center gap-1" role="group" aria-label={`${product.name} slide controls`}>
             <button type="button" aria-label="Previous slide" onClick={() => moveSlide(-1)} className="text-primary flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-background/60 focus-visible:outline-2 focus-visible:outline-primary">
@@ -286,7 +293,7 @@ function ProductPanel({ product }: { product: PortfolioProduct }) {
       <ProductArtwork product={product} />
       <div className="flex flex-col py-1 sm:py-2">
         <div className="flex items-center justify-between gap-2 text-[9px] font-bold uppercase tracking-[.15em] text-[#705144] dark:text-[#d1ad98]">
-          <span>{product.number} / 04 · {product.category}</span>
+          <span>{product.number} / {String(products.length).padStart(2, "0")} · {product.category}</span>
           <ArrowUpRight className="size-3 text-brand" />
         </div>
         <h3 className="mb-0 mt-4 text-3xl sm:text-4xl lg:text-5xl font-semibold leading-[1] tracking-[-.065em] text-[#22201e] dark:text-[#f5f0eb]">{product.name}</h3>
@@ -320,7 +327,7 @@ function ProductPanel({ product }: { product: PortfolioProduct }) {
 }
 
 export default function ProductsSection() {
-  const [selectedProductId, setSelectedProductId] = useState<ProductId>("gum");
+  const [selectedProductId, setSelectedProductId] = useState<ProductId>("rendesco");
   const selectedProduct = products.find((product) => product.id === selectedProductId) ?? products[0];
   return (
     <section id="products" className="scroll-mt-6 border-t border-[#e2dbd3] bg-[rgb(241,238,233)] py-8 text-left sm:py-8 dark:border-[#443b34] dark:bg-background">
