@@ -17,6 +17,7 @@ import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ResumeDownload } from "@/components/resume-download";
+import { PortfolioFeatureTour } from "@/components/portfolio-feature-tour";
 import Logo from "@/components/ui/logo"
 
 import uclLogo from "@/assets/company_logos/ucl_logo.svg";
@@ -78,7 +79,7 @@ export default function Home() {
   return (
     <>
     <main className="bg-background min-h-screen overflow-hidden">
-      <header className="relative z-30 mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-14">
+      <header data-tour="navigation" className="relative z-30 mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-14">
         <a
           href="#"
           onClick={() => setActiveView("home")}
@@ -402,6 +403,7 @@ export default function Home() {
         © 2026 Gio Automate Ltd. All rights reserved.
       </div>
     </footer>
+    <PortfolioFeatureTour />
     </>
   );
 }

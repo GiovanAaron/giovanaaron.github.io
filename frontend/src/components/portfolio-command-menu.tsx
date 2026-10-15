@@ -137,6 +137,7 @@ export function PortfolioCommandMenu() {
     <div className="lg:mx-auto lg:my-8 lg:min-h-14 lg:w-[calc(100%-2rem)] lg:max-w-xl">
     <motion.div
       ref={menuRef}
+      data-tour="portfolio-command"
       layout="position"
       layoutDependency={isFixed}
       transition={{
