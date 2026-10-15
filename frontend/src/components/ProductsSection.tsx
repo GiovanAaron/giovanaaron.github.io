@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HeartHandshake, Leaf, Workflow } from "lucide-react";
+import { ArrowDown, Database, LockKeyhole, ShieldCheck, ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Gamepad2, HeartHandshake, Leaf, Sparkles, Workflow } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,8 +12,10 @@ import carequillDashboard1 from "@/assets/case_studies/carequill_ai_dashboard1.s
 import carequillDashboard2 from "@/assets/case_studies/carequill_ai_dashboard2.svg";
 import carequillDashboard3 from "@/assets/case_studies/carequill_ai_dashboard3.svg";
 import carequillCalendar from "@/assets/case_studies/carequill_ai_calendar.svg";
+import chatgioptApp from "@/assets/case_studies/chatgiopt_app.png";
+import chatgioptDesign from "@/assets/case_studies/chatgiopt_design.png";
 
-type ProductId = "gum" | "flowfree" | "rendesco" | "giving" | "carequill";
+type ProductId = "gum" | "flowfree" | "rendesco" | "giving" | "carequill" | "chatgiopt";
 
 type ProductProof = { value: string; label: string };
 
@@ -61,26 +63,22 @@ const products: PortfolioProduct[] = [
     ],
   },
   {
-    id: "gum",
-    slides: [
-      { id: "game", label: "Game artwork", kind: "html", component: PrimaryProductVisual },
-      { id: "home", label: "Home screen", kind: "image", src: gumHome.src, alt: "Don’t Touch My Gum! home screen", fit: "contain" },
-      { id: "code", label: "Game code", kind: "image", src: gumCode.src, alt: "Animated view of the Don’t Touch My Gum! code", fit: "contain" },
-      { id: "levels", label: "Level select", kind: "html", component: AlternateProductVisual },
-      { id: "music-production", label: "Music production", kind: "image", src: gumMusicProduction.src, alt: "Music production for Don’t Touch My Gum!", fit: "contain" },
-    ],
+    id: "chatgiopt",
     number: "02",
-    name: "Don’t Touch My Gum!",
-    shortName: "Don’t Touch My Gum!",
-    category: "Indie Game",
-    description: "A desktop mini-game I took from idea to release, bringing together code, illustration, interface design and electronic music production.",
-    technologies: ["Python", "PyGame", "Figma", "Procreate", "Ableton"],
-    proof: [
-      { value: "100+", label: "players in its first month" },
-      { value: "44", label: "peak concurrent players" },
-      { value: "Featured", label: "in the PyGame WebAssembly Collection" },
+    name: "ChatGioPT",
+    shortName: "ChatGioPT",
+    category: "AI portfolio assistant",
+    description: "An illustrated portfolio assistant that helps recruiters and visitors explore my projects and professional experience through natural-language questions. I combined product design, UX/UI, custom SVG illustration, expressive animation and full-stack AI integration to make the experience approachable. Verified preset answers handle familiar questions, while retrieval-augmented generation grounds custom responses in curated portfolio records. A separate Azure Functions backend keeps retrieval, prompts and model credentials outside the publicly hosted frontend.",
+    cta: { label: "Try ChatGioPT", href: "/ChatGioPT/" },
+    architecture: ["Retrieval-Augmented Generation", "RAG", "Prompt Engineering", "Preset Answer Matching", "Contextual Retrieval", "Visitor Personalisation", "Serverless APIs", "Independent Deployments"],
+    technologies: ["Azure OpenAI", "LangChain", "Azure Functions", "Next.js", "Figma", "TypeScript", "Tailwind CSS", "GitHub Pages"],
+    proof: [],
+    slides: [
+      { id: "conversation", label: "Portfolio conversation", kind: "html", component: PrimaryProductVisual },
+      { id: "app", label: "ChatGioPT app", kind: "image", src: chatgioptApp.src, alt: "ChatGioPT portfolio assistant interface", fit: "contain" },
+      { id: "retrieval", label: "Grounded answer flow", kind: "html", component: AlternateProductVisual },
+      { id: "design", label: "ChatGioPT design", kind: "image", src: chatgioptDesign.src, alt: "ChatGioPT illustration and interface design", fit: "contain" },
     ],
-    cta: { label: "Play Now", href: "https://giovanaaron.itch.io/dont-touch-my-gum-cv" },
   },
   {
     id: "giving",
@@ -102,8 +100,30 @@ const products: PortfolioProduct[] = [
     ],
   },
   {
-    id: "carequill",
+    id: "gum",
+    slides: [
+      { id: "game", label: "Game artwork", kind: "html", component: PrimaryProductVisual },
+      { id: "home", label: "Home screen", kind: "image", src: gumHome.src, alt: "Don’t Touch My Gum! home screen", fit: "contain" },
+      { id: "code", label: "Game code", kind: "image", src: gumCode.src, alt: "Animated view of the Don’t Touch My Gum! code", fit: "contain" },
+      { id: "levels", label: "Level select", kind: "html", component: AlternateProductVisual },
+      { id: "music-production", label: "Music production", kind: "image", src: gumMusicProduction.src, alt: "Music production for Don’t Touch My Gum!", fit: "contain" },
+    ],
     number: "04",
+    name: "Don’t Touch My Gum!",
+    shortName: "Don’t Touch My Gum!",
+    category: "Indie Game",
+    description: "A desktop mini-game I took from idea to release, bringing together code, illustration, interface design and electronic music production.",
+    technologies: ["Python", "PyGame", "Figma", "Procreate", "Ableton"],
+    proof: [
+      { value: "100+", label: "players in its first month" },
+      { value: "44", label: "peak concurrent players" },
+      { value: "Featured", label: "in the PyGame WebAssembly Collection" },
+    ],
+    cta: { label: "Play Now", href: "https://giovanaaron.itch.io/dont-touch-my-gum-cv" },
+  },
+  {
+    id: "carequill",
+    number: "05",
     name: "Carequill AI",
     shortName: "Carequill AI",
     cta: { label: "Book consultation", href: "https://calendar.app.google/eE5FcZnghkSBCSpH8" },
@@ -128,7 +148,7 @@ const products: PortfolioProduct[] = [
   //     { id: "chat", label: "Private conversation", kind: "html", component: PrimaryProductVisual },
   //     { id: "home", label: "Your space", kind: "html", component: AlternateProductVisual },
   //   ],
-  //   number: "05",
+  //   number: "06",
   //   name: "FlowFree",
   //   shortName: "FlowFree",
   //   category: "Mental wellbeing",
@@ -143,6 +163,7 @@ const products: PortfolioProduct[] = [
 ];
 
 function ProductMark({ id }: { id: ProductId }) {
+  if (id === "chatgiopt") return <Sparkles className="size-3" />;
   if (id === "carequill") return <Workflow className="size-3" />;
   if (id === "gum") return <Gamepad2 className="size-3" />;
   if (id === "flowfree" || id === "giving") return <HeartHandshake className="size-3" />;
@@ -152,6 +173,18 @@ function ProductMark({ id }: { id: ProductId }) {
 function PrimaryProductVisual({ product }: { product: PortfolioProduct }) {
   return (
     <>
+      {product.id === "chatgiopt" && (
+        <div className="relative z-10 mx-auto my-3 w-[90%] max-w-64 -rotate-1 rounded-2xl border border-[#e7e1d9] bg-[#fbfaf7] p-4 text-stone-600 shadow-lg">
+          <div className="flex items-center gap-2 border-b border-stone-200 pb-3">
+            <span className="grid size-7 place-items-center rounded-full bg-[#e5d8c9] text-[#705144]"><Sparkles className="size-3" /></span>
+            <div><h3 className="text-sm font-semibold text-[#705144]">ChatGioPT</h3><p className="text-[9px] text-stone-500">A little personality. Grounded answers.</p></div>
+          </div>
+          <div className="mt-4 ml-auto max-w-[90%] rounded-xl rounded-br-sm bg-[#705144] px-3 py-2 text-[10px] leading-relaxed text-white">What kind of products has Giovan worked on?</div>
+          <div className="mt-3 max-w-[95%] rounded-xl rounded-bl-sm bg-[#eee8df] px-3 py-2 text-[10px] leading-relaxed">Explore healthcare workflows, clean energy, digital giving and independent games.</div>
+          <div className="mt-4 flex flex-wrap gap-1.5">{["Projects", "Experience", "Skills"].map(label => <span key={label} className="rounded-full border border-stone-200 px-2 py-1 text-[9px]">{label}</span>)}</div>
+          <p className="mt-3 text-[9px] uppercase tracking-wider text-stone-500">Illustrative conversation study</p>
+        </div>
+      )}
       {product.id === "carequill" && (
     <div className="relative z-10 mx-auto my-3 w-[90%] max-w-64 -rotate-1 rounded-2xl border border-[#e7e1d9] bg-[#fbfaf7] p-4 text-stone-600 shadow-lg">
       <div className="flex items-center justify-between border-b border-stone-200 pb-3">
@@ -215,6 +248,68 @@ function PrimaryProductVisual({ product }: { product: PortfolioProduct }) {
 }
 
 function AlternateProductVisual({ product }: { product: PortfolioProduct }) {
+  if (product.id === "chatgiopt") return (
+    <figure className="relative z-10 mx-auto my-3 w-full max-w-sm overflow-hidden rounded-xl border border-[#455950] bg-[#17211f] p-4 text-[#e8eee8] shadow-xl">
+      <div className="mb-4 flex items-center justify-between gap-2 border-b border-white/10 pb-3">
+        <div>
+          <span className="font-mono text-[8px] uppercase tracking-[.15em] text-[#a5b7ac]">ChatGioPT / system architecture</span>
+          <h3 className="mt-1 text-sm font-semibold tracking-tight">Retrieve. Validate. Respond.</h3>
+        </div>
+        <ShieldCheck className="size-5 shrink-0 text-[#b8cdb9]" aria-hidden="true" />
+      </div>
+
+      <div className="rounded-lg border border-white/15 bg-white/[.03] p-3">
+        <span className="font-mono text-[8px] uppercase tracking-widest text-[#a5b7ac]">01 / Public client · GitHub Pages</span>
+        <div className="mt-2 rounded border border-[#728d7b]/50 bg-[#24352c] px-2 py-2 text-center text-[10px] font-medium">Question + visitor context</div>
+        <ArrowDown className="mx-auto my-1 size-3 text-[#a5b7ac]" aria-hidden="true" />
+        <div className="rounded border border-[#bba58c]/50 bg-[#34332b] px-2 py-2 text-center text-[10px] font-medium">Intent gate → preset confidence score</div>
+        <div className="mx-auto h-2 w-px bg-[#728d7b]" aria-hidden="true" />
+        <div className="grid grid-cols-2 gap-2 border-t border-[#728d7b] pt-2">
+          <div className="rounded border border-[#728d7b]/50 bg-[#24352c] px-2 py-2 text-center">
+            <span className="block font-mono text-[8px] uppercase text-[#b8cdb9]">Local match</span>
+            <span className="mt-1 block text-[10px]">Verified answer</span>
+            <span className="mt-1 block text-[8px] text-[#a5b7ac]">No model request</span>
+          </div>
+          <div className="rounded border border-[#bba58c]/50 bg-[#34332b] px-2 py-2 text-center">
+            <span className="block font-mono text-[8px] uppercase text-[#e0c9ac]">Low confidence</span>
+            <span className="mt-1 block text-[10px]">POST /api/chat</span>
+            <span className="mt-1 block text-[8px] text-[#c6bbab]">Selected context only</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-2 py-2 pr-6 font-mono text-[8px] text-[#c5d5c7]">
+        <LockKeyhole className="size-3" aria-hidden="true" /> HTTPS <ArrowDown className="size-3" aria-hidden="true" />
+      </div>
+      <div className="rounded-lg border border-dashed border-[#96b59b] bg-[#1c2d23] p-3">
+        <div className="flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-widest text-[#b8cdb9]">
+          <ShieldCheck className="size-3" aria-hidden="true" /> 02 / Server boundary · Azure Functions
+        </div>
+        <div className="mt-2 rounded border border-white/15 bg-black/15 px-2 py-2 text-center text-[10px]">Request validation + abuse checks</div>
+        <ArrowDown className="mx-auto my-1 size-3 text-[#a5b7ac]" aria-hidden="true" />
+        <div className="flex items-center gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-col items-center rounded border border-white/15 bg-black/15 px-1.5 py-2 text-center">
+            <Database className="mb-1 size-3 text-[#b8cdb9]" aria-hidden="true" />
+            <span className="text-[10px]">Curated records</span>
+            <span className="text-[8px] text-[#a5b7ac]">LangChain retrieval</span>
+          </div>
+          <ArrowRight className="size-3 shrink-0 text-[#b8cdb9]" aria-hidden="true" />
+          <div className="flex min-w-0 flex-1 flex-col items-center rounded border border-[#bba58c]/50 bg-[#34332b] px-1.5 py-2 text-center">
+            <Sparkles className="mb-1 size-3 text-[#e0c9ac]" aria-hidden="true" />
+            <span className="text-[10px]">Azure OpenAI</span>
+            <span className="text-[8px] text-[#c6bbab]">Grounded generation</span>
+          </div>
+        </div>
+        <div className="mt-2 flex items-start gap-1.5 rounded bg-black/20 px-2 py-2 text-[9px] leading-relaxed text-[#bfd0c2]">
+          <LockKeyhole className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
+          Prompts, retrieval rules and model credentials stay server-side.
+        </div>
+      </div>
+      <ArrowDown className="mx-auto my-1.5 size-3 text-[#a5b7ac]" aria-hidden="true" />
+      <div className="rounded border border-[#728d7b]/50 px-2 py-2 text-center text-[10px]">Grounded answer + validated references</div>
+      <figcaption className="mt-3 font-mono text-[8px] uppercase tracking-widest text-[#91a397]">Illustrative architecture · client / server separation</figcaption>
+    </figure>
+  );
   if (product.id === "carequill") return (
     <div className="relative z-10 mx-auto my-3 w-[90%] max-w-64 rotate-1 rounded-2xl border border-[#e7e1d9] bg-[#fbfaf7] p-4 text-stone-600 shadow-lg">
       <span className="text-[9px] uppercase tracking-wider text-[#705144]">Carequill AI · Responsibility routing</span>
@@ -303,33 +398,36 @@ function ProductSlideVisual({ slide, product }: { slide: ProductSlide; product: 
 
 function ProductArtwork({ product }: { product: PortfolioProduct }) {
   const [activeSlide, setActiveSlide] = useState(0);
-  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [rotationMode, setRotationMode] = useState<"automatic" | "manual">("automatic");
+  const rotationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reduceMotion = useReducedMotion();
   const slideCount = product.slides.length;
   const slide = product.slides[activeSlide] ?? product.slides[0];
-  // ProductPanel is keyed by product ID, so each selection starts a fresh timer.
+  // The keyed product panel resets both the slide and rotation mode on selection.
   useEffect(() => {
-    if (slideCount < 2) return;
-    autoAdvanceRef.current = setTimeout(() => {
-      autoAdvanceRef.current = null;
-      setActiveSlide(1);
+    if (rotationMode !== "automatic" || slideCount < 2) return;
+    rotationTimerRef.current = setInterval(() => {
+      setActiveSlide(current => (current + 1) % slideCount);
     }, 5000);
     return () => {
-      if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
-      autoAdvanceRef.current = null;
+      if (rotationTimerRef.current !== null) clearInterval(rotationTimerRef.current);
+      rotationTimerRef.current = null;
     };
-  }, [product.id, slideCount]);
+  }, [product.id, slideCount, rotationMode]);
 
-  function cancelAutoAdvance() {
-    if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
-    autoAdvanceRef.current = null;
+  function enableManualRotation() {
+    if (rotationTimerRef.current !== null) clearInterval(rotationTimerRef.current);
+    rotationTimerRef.current = null;
+    setRotationMode("manual");
   }
   function moveSlide(direction: number) {
-    cancelAutoAdvance();
     setActiveSlide(current => (current + direction + slideCount) % slideCount);
   }
   return (
-    <div role="region" aria-roledescription="carousel" aria-label={`${product.name} visuals`} className={`relative flex min-h-64 flex-col justify-between bg-[#eee7df] p-4 sm:min-h-80 sm:p-5 dark:bg-[#29231f] ${slide.kind === "image" ? "overflow-hidden lg:overflow-visible" : "overflow-hidden"}`}>
+    <div role="region" aria-roledescription="carousel" aria-label={`${product.name} visuals`}
+      onPointerDownCapture={enableManualRotation}
+      onClickCapture={enableManualRotation}
+      className={`relative flex min-h-64 flex-col justify-between bg-[#eee7df] p-4 sm:min-h-80 sm:p-5 dark:bg-[#29231f] ${slide.kind === "image" ? "overflow-hidden lg:overflow-visible" : "overflow-hidden"}`}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute -right-12 -top-14 size-36 rounded-full border border-white/60 sm:size-48" />
       <div className="absolute -bottom-20 -left-16 size-40 rounded-full border border-white/50 sm:size-56" />
@@ -354,7 +452,7 @@ function ProductArtwork({ product }: { product: PortfolioProduct }) {
             </button>
             <div className="flex min-w-0 items-center gap-1 overflow-x-auto px-1">
               {product.slides.map((item, index) => (
-                <button key={item.id} type="button" aria-label={`Show ${item.label}, ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => { cancelAutoAdvance(); setActiveSlide(index); }} className="flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary">
+                <button key={item.id} type="button" aria-label={`Show ${item.label}, ${index + 1} of ${slideCount}`} aria-pressed={activeSlide === index} onClick={() => setActiveSlide(index)} className="flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-primary">
                   <span className={`h-2 rounded-full transition-all duration-200 ${activeSlide === index ? "w-4 bg-[#705144] dark:bg-[#d1ad98]" : "w-2 bg-[#b6a99c] hover:bg-[#705144]/70"}`} />
                 </button>
               ))}
@@ -364,7 +462,7 @@ function ProductArtwork({ product }: { product: PortfolioProduct }) {
             </button>
           </div>
         ) : null}
-        <span className="sr-only" aria-live="polite" aria-atomic="true">Slide {activeSlide + 1} of {slideCount}: {slide.label}</span>
+        <span className="sr-only" aria-live={rotationMode === "automatic" ? "off" : "polite"} aria-atomic="true">Slide {activeSlide + 1} of {slideCount}: {slide.label}</span>
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import { VisitorOnboarding } from "@/components/visitor-onboarding";
 import { useVisitor } from "@/components/visitor-provider";
 import { presetAnswers } from "@/data/giopt/answers";
 import { answerQuestion } from "@/lib/giopt/answer-question";
+import { formatResponseText } from "@/lib/giopt/format-response-text";
 import type { GioPTMessage } from "@/types/giopt";
 import type { VisitorProfile } from "@/types/visitor";
 
@@ -189,7 +190,7 @@ export function PortfolioCommandMenu() {
             //   backgroundColor: "color-mix(in oklch, var(--background) 70%, transparent)",
             // }}
           >
-            {answer}
+            {formatResponseText(answer)}
             {suggestedQuestions.length > 0 ? (
               <div className="mt-3 flex flex-col gap-2" role="group" aria-label="Suggested questions">
                 {suggestedQuestions.map((suggestion) => (

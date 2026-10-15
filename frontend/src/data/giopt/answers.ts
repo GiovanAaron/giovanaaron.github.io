@@ -30,12 +30,12 @@ export const presetAnswers: PresetAnswer[] = [
 
     audiences: ["talent_partner_agency", "internal_recruitment_specialist"],
 
-    links: [
-      {
-        label: "View healthcare experience",
-        href: "/experience#healthcare",
-      },
-    ],
+    // links: [
+    //   {
+    //     label: "View healthcare experience",
+    //     href: "/experience#healthcare",
+    //   },
+    // ],
 
   },
 
@@ -110,7 +110,7 @@ export const presetAnswers: PresetAnswer[] = [
     links: [
       {
         label: "View Don’t Touch My Gum!",
-        href: "/projects/dont-touch-my-gum",
+        href: "https://giovanaaron.itch.io/dont-touch-my-gum-cv",
       },
     ],
   },
@@ -185,7 +185,7 @@ export const presetAnswers: PresetAnswer[] = [
     phrases: ["healthcare experience", "worked in healthcare", "health technology", "patient software", "mental health software"],
     industries: ["healthtech", "tech_for_good_nonprofit"],
     audiences: ["talent_partner_agency", "internal_recruitment_specialist"],
-    links: [{ label: "View healthcare experience", href: "/experience#healthcare" }],
+    // links: [{ label: "View healthcare experience", href: "/experience#healthcare" }],
 
   },
   {
@@ -371,7 +371,7 @@ export const presetAnswers: PresetAnswer[] = [
     phrases: ["launched independently", "independent project", "built by himself", "end to end ownership", "self starter"],
     industries: ["ai", "retail", "media_publishing", "b2b"],
     audiences: ["talent_partner_agency", "internal_recruitment_specialist", "other"],
-    links: [{ label: "View Don't Touch My Gum!", href: "/projects/dont-touch-my-gum" }],
+    links: [{ label: "View Don't Touch My Gum!", href: "https://giovanaaron.itch.io/dont-touch-my-gum-cv" }],
   },
   {
     id: "education-certifications",

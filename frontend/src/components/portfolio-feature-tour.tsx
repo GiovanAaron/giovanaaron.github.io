@@ -199,7 +199,7 @@ export function PortfolioFeatureTour() {
             <span aria-hidden="true" className={`bg-card border-border absolute size-4 rotate-45 ${below ? "-top-2 border-l border-t" : "-bottom-2 border-b border-r"}`} style={{ left: arrowLeft - 8 }} />
             <div className="text-primary mb-3 flex items-center gap-2 text-xs font-semibold  tracking-wider">
               {step === "command" ? <Sparkles className="size-4" /> : <span className="flex items-center gap-1"><Sun className="size-4" /><Moon className="size-3" /></span>}
-              {step === "command" ? "MEET CHATGioPT" : "MAKE YOURSELF COMFORTABLE"}
+              {step === "command" ? "Meet ChatGioPT" : "MAKE YOURSELF COMFORTABLE"}
             </div>
             <p id="portfolio-tour-description" className="text-sm leading-6">
               {step === "command"
