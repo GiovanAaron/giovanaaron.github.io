@@ -4,10 +4,30 @@ import Logo from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { GioPTChat } from "@/components/giopt-chat";
+import openGraphImage from "./meta/opengraph-image.png";
 
 export const metadata: Metadata = {
   title: "ChatGioPT — Giovan Aaron",
   description: "Chat with Giovan’s portfolio assistant about his projects, skills and experience.",
+  alternates: { canonical: "/ChatGioPT/" },
+  openGraph: {
+    type: "website",
+    siteName: "Giovan Aaron",
+    url: "/ChatGioPT/",
+    title: "ChatGioPT — Giovan Aaron",
+    description: "Explore Giovan’s projects, skills and experience through conversation with his portfolio assistant.",
+    images: [{
+      url: openGraphImage.src,
+      width: openGraphImage.width,
+      height: openGraphImage.height,
+      alt: "ChatGioPT — Giovan Aaron’s portfolio assistant",
+    }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ChatGioPT — Giovan Aaron",
+    description: "Explore Giovan’s projects, skills and experience through conversation with his portfolio assistant.",
+  },
 };
 
 export default function ChatGioPTPage() {
