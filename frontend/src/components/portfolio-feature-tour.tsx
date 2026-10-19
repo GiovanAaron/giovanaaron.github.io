@@ -65,7 +65,7 @@ export function PortfolioFeatureTour() {
         target.scrollIntoView({ block: "center", behavior: "instant" });
       }
       setStep("command");
-    }, 800);
+    }, 3000);
     function handleBreakpointChange() {
       if (!desktop.matches) {
         window.clearTimeout(timer);
