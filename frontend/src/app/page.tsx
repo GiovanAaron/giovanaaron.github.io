@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import {
@@ -13,6 +12,8 @@ import {
 
 import AboutMe from "@/components/about-me";
 import ProductsSection from "@/components/ProductsSection";
+import { navigateRoot, useRootNavigation } from "@/lib/use-root-navigation";
+import type { PortfolioView } from "@/lib/root-navigation";
 import { PortfolioHeroImage } from "@/components/portfolio-hero-image";
 import { PortfolioCommandMenu } from "@/components/portfolio-command-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -65,10 +66,8 @@ const techStackBackgrounds = [
   "bg-[#D4AF37]/15",
 ];
 
-type PortfolioView = "home" | "about" | "products";
-
 export default function Home() {
-  const [activeView, setActiveView] = useState<PortfolioView>("home");
+  const { view: activeView, project: selectedProject } = useRootNavigation();
   const isAboutActive = activeView === "about";
   const reduceMotion = useReducedMotion();
   const sectionTransition = {
@@ -82,7 +81,7 @@ export default function Home() {
       <header data-tour="navigation" className="relative z-30 mx-auto flex h-20 w-full max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-14">
         <a
           href="#"
-          onClick={() => setActiveView("home")}
+          onClick={(event) => { event.preventDefault(); navigateRoot("home"); }}
           className="flex items-center gap-3"
           aria-label="Studio home"
         >
@@ -98,14 +97,14 @@ export default function Home() {
             className="hidden items-center gap-8 text-sm md:flex"
             aria-label="Main navigation"
           >
-            <a href="#home" onClick={() => setActiveView("home")} aria-current={activeView === "home" ? "page" : undefined} className={`transition-colors hover:text-foreground ${activeView === "home" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}>
+            <a href="#home" onClick={(event) => { event.preventDefault(); navigateRoot("home"); }} aria-current={activeView === "home" ? "page" : undefined} className={`transition-colors hover:text-foreground ${activeView === "home" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}>
               Home
             </a>
              <a
-              href="#about-me"
+              href="#aboutme"
               onClick={(event) => {
                 event.preventDefault();
-                setActiveView("about");
+                navigateRoot("about");
               }}
               aria-current={isAboutActive ? "page" : undefined}
               className={`transition-colors hover:text-foreground ${isAboutActive ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}
@@ -113,10 +112,10 @@ export default function Home() {
               Profile
             </a>
             <a
-              href="#products"
+              href="#projects"
               onClick={(event) => {
                 event.preventDefault();
-                setActiveView("products");
+                navigateRoot("products");
               }}
               aria-current={activeView === "products" ? "page" : undefined}
               className={`transition-colors hover:text-foreground ${activeView === "products" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}
@@ -355,7 +354,7 @@ export default function Home() {
         <div className="mx-auto  flex w-full max-w-[1440px] justify-start px-5 sm:px-8 lg:px-14">
           <button
             type="button"
-            onClick={() => setActiveView("home")}
+            onClick={(event) => { event.preventDefault(); navigateRoot("home"); }}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <ArrowLeft className="size-4" />
@@ -373,11 +372,11 @@ export default function Home() {
         transition={sectionTransition}
         className="mx-auto w-full pt-0 pb-12 sm:pt-0"
       >
-        <ProductsSection />
+        <ProductsSection selectedProductId={selectedProject} onProductChange={(project) => navigateRoot("products", project)} />
         <div className="mx-auto flex w-full max-w-[1440px] justify-start px-5 sm:px-8 lg:px-14">
           <button
             type="button"
-            onClick={() => setActiveView("home")}
+            onClick={(event) => { event.preventDefault(); navigateRoot("home"); }}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <ArrowLeft className="size-4" />

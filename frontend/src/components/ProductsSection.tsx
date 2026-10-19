@@ -14,8 +14,9 @@ import carequillDashboard3 from "@/assets/case_studies/carequill_ai_dashboard3.s
 import carequillCalendar from "@/assets/case_studies/carequill_ai_calendar.svg";
 import chatgioptApp from "@/assets/case_studies/chatgiopt_app.png";
 import chatgioptDesign from "@/assets/case_studies/chatgiopt_design.png";
+import type { RootProjectId } from "@/lib/root-navigation";
 
-type ProductId = "gum" | "flowfree" | "rendesco" | "giving" | "carequill" | "chatgiopt";
+type ProductId = RootProjectId | "flowfree";
 
 type ProductProof = { value: string; label: string };
 
@@ -366,32 +367,85 @@ function AlternateProductVisual({ product }: { product: PortfolioProduct }) {
 }
 
 function ProductImageVisual({ slide }: { slide: Extract<ProductSlide, { kind: "image" }> }) {
-  const [hasError, setHasError] = useState(false);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const image = imageRef.current;
+    if (!image) return;
+    let active = true;
+    let decoding = false;
+    let failed = false;
+
+    function fail() {
+      failed = true;
+      if (active) setStatus("error");
+    }
+    async function reveal() {
+      if (!image || decoding || failed) return;
+      decoding = true;
+      try {
+        if (typeof image.decode === "function") await image.decode();
+        else await Promise.resolve();
+        if (active && !failed) setStatus(image.naturalWidth > 0 ? "ready" : "error");
+      } catch {
+        // Some browsers reject decode() for otherwise displayable images.
+        if (active && !failed) setStatus(image.naturalWidth > 0 ? "ready" : "error");
+      }
+    }
+    image.addEventListener("load", reveal);
+    image.addEventListener("error", fail);
+    // Cached images may already be loaded before the listeners are attached.
+    if (image.complete) {
+      if (image.naturalWidth > 0) void reveal();
+      else void Promise.resolve().then(() => { if (active) fail(); });
+    }
+    return () => {
+      active = false;
+      image.removeEventListener("load", reveal);
+      image.removeEventListener("error", fail);
+    };
+  }, [slide.src]);
+
   return (
-    <figure className="mx-auto my-3 w-full max-w-sm lg:absolute lg:left-1/2 lg:top-1/2 lg:my-0 lg:w-[115%] lg:max-w-none lg:-translate-x-1/2 lg:-translate-y-1/2">
-      {hasError ? (
-        <div role="status" className="bg-background/70 text-muted-foreground flex aspect-[4/3] items-center justify-center rounded-lg p-4 text-center text-xs">
+    <figure aria-busy={status === "loading"} className="mx-auto my-3 w-full max-w-sm lg:absolute lg:left-1/2 lg:top-1/2 lg:my-0 lg:w-[115%] lg:max-w-none lg:-translate-x-1/2 lg:-translate-y-1/2">
+      <div className="relative mx-auto w-full max-w-[90%]">
+      {status === "error" ? (
+        <div role="status" className="bg-background/70 text-muted-foreground flex aspect-[4/3] items-center justify-center rounded-lg p-4 text-center text-xs lg:aspect-auto lg:h-80">
           Image unavailable: {slide.alt}
         </div>
       ) : (
-        // Source images intentionally use native img alongside the HTML/CSS slides.
-        // eslint-disable-next-line @next/next/no-img-element
+        <>
+        {status === "loading" ? (
+          <div role="status" className="bg-background/80 text-muted-foreground absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-border/60 p-4">
+            <div aria-hidden="true" className="w-full max-w-40 animate-pulse space-y-3 motion-reduce:animate-none">
+              <div className="bg-muted h-20 rounded-md" />
+              <div className="bg-muted h-2 w-3/4 rounded-full" />
+              <div className="bg-muted h-2 w-1/2 rounded-full" />
+            </div>
+            <span className="text-xs">Loading image…</span>
+          </div>
+        ) : null}
+        {/* Source images intentionally use native img alongside the HTML/CSS slides. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          ref={imageRef}
           src={slide.src}
           alt={slide.alt}
           loading="lazy"
           decoding="async"
-          onError={() => setHasError(true)}
-          className={`mx-auto aspect-[4/3] w-full max-w-[90%] rounded-lg lg:aspect-auto lg:h-80 ${slide.fit === "cover" ? "object-cover" : "object-contain"}`}
+          className={`aspect-[4/3] w-full rounded-lg transition-opacity duration-300 motion-reduce:transition-none lg:aspect-auto lg:h-80 ${status === "ready" ? "opacity-100" : "opacity-0"} ${slide.fit === "cover" ? "object-cover" : "object-contain"}`}
         />
+        </>
       )}
+      </div>
       {slide.caption ? <figcaption className="text-muted-foreground mt-2 text-center text-[10px]">{slide.caption}</figcaption> : null}
     </figure>
   );
 }
 
 function ProductSlideVisual({ slide, product }: { slide: ProductSlide; product: PortfolioProduct }) {
-  if (slide.kind === "image") return <ProductImageVisual slide={slide} />;
+  if (slide.kind === "image") return <ProductImageVisual key={slide.src} slide={slide} />;
   const Visual = slide.component;
   return <Visual product={product} />;
 }
@@ -514,8 +568,10 @@ function ProductPanel({ product }: { product: PortfolioProduct }) {
   );
 }
 
-export default function ProductsSection() {
-  const [selectedProductId, setSelectedProductId] = useState<ProductId>("rendesco");
+export default function ProductsSection({ selectedProductId, onProductChange }: {
+  selectedProductId: RootProjectId;
+  onProductChange: (product: RootProjectId) => void;
+}) {
   const selectedProduct = products.find((product) => product.id === selectedProductId) ?? products[0];
   return (
     <section id="products" className="scroll-mt-6 border-t border-[#e2dbd3] bg-[rgb(241,238,233)] py-8 text-left sm:py-8 dark:border-[#443b34] dark:bg-background">
@@ -528,7 +584,9 @@ export default function ProductsSection() {
           {/* <p className="mb-1 max-w-96 text-xs leading-[1.8] text-[#706c67] dark:text-muted-foreground md:justify-self-end lg:text-sm">Selected product engineering work spanning independently launched products and cross-functional teams, with a focus on wellbeing, clean energy, social impact and play.</p> */}
         </div>
 
-        <Tabs value={selectedProductId} onValueChange={(value) => setSelectedProductId(value as ProductId)} orientation="vertical" className="gap-0">
+        <Tabs value={selectedProductId} onValueChange={(value) => {
+          if (products.some(product => product.id === value)) onProductChange(value as RootProjectId);
+        }} orientation="vertical" className="gap-0">
           <div className="grid gap-4 md:grid-cols-[minmax(145px,.7fr)_minmax(0,2fr)] md:gap-6 lg:grid-cols-[minmax(155px,.72fr)_minmax(0,2.2fr)] lg:gap-8">
             <TabsList aria-label="Select a product" className="h-auto w-full flex-row items-stretch justify-start overflow-x-auto rounded-none border-0 border-b border-[#ded7ce] bg-transparent p-0 md:col-start-1 md:flex-col md:overflow-visible md:border-b-0 md:pr-3">
               {products.map((product) => (
