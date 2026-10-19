@@ -146,7 +146,7 @@ export function GioPTChat() {
                     setTypingMessageId(null);
                     inputRef.current?.focus({ preventScroll: true });
                   }} />
-              ) : <p className="whitespace-pre-wrap break-words">{message.role === "assistant" ? formatResponseText(message.content) : message.content}</p>}
+              ) : <div className="whitespace-pre-wrap break-words">{message.role === "assistant" ? formatResponseText(message.content) : message.content}</div>}
               {typingMessageId !== message.id && message.links?.length ? <ul className="mt-3 space-y-1">{message.links.map(link => <li key={link.href}><a href={link.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">{link.label}</a></li>)}</ul> : null}
             </div>
           </div>

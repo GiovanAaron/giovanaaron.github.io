@@ -45,10 +45,10 @@ describe("resolveQuestion", () => {
       }])
     })
 
-    it("uses the provider's role-specific CV resolution even for an industry-specific preset", () => {
+    it.each(["talent_partner_agency", "internal_recruitment_specialist"] as const)("uses the provider's role-specific CV resolution for %s", visitorType => {
       const asset = cvAssets.find(asset => asset.role === "mobile")!
       const context: VisitorProfile = {
-        visitorType: "talent_partner_agency",
+        visitorType,
         requestedIndustry: "finance_banking",
         role: "mobile",
         resolution: {
@@ -67,6 +67,30 @@ describe("resolveQuestion", () => {
         })
         expect(response.links.filter(link => link.href.startsWith("/cv/"))).toHaveLength(1)
       }
+    })
+
+    it.each(["other", null] as const)("does not offer a resolved CV for visitor type %s", visitorType => {
+      const asset = cvAssets.find(asset => asset.role === "full_stack")!
+      const context: VisitorProfile = {
+        visitorType,
+        requestedIndustry: "ai",
+        role: "full_stack",
+        resolution: {
+          requestedIndustry: "ai",
+          matchedIndustry: "ai",
+          role: "full_stack",
+          asset,
+          matchType: "industry_match",
+        },
+      }
+
+      const response = resolveQuestion("What has Giovan built in climate technology?", presetAnswers, context)
+
+      expect(response.source).toBe("preset")
+      expect(response.links).toEqual([{
+        label: "Explore Gio/Grid",
+        href: "https://giovanaaron.github.io/Gio-Grid/",
+      }])
     })
 
     it("falls back when no portfolio answer is relevant enough", () => {

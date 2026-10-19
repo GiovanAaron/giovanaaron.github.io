@@ -154,7 +154,11 @@ function getLinks(
 ): PortfolioLink[] {
   const links = [...(preset.links ?? [])]
 
-  if (context?.resolution) {
+  if (
+    context?.resolution &&
+    (context.visitorType === "talent_partner_agency" ||
+      context.visitorType === "internal_recruitment_specialist")
+  ) {
     links.push({
       label: "Download CV",
       href: `/cv/${encodeURIComponent(context.resolution.asset.filename)}`,
