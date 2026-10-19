@@ -14,8 +14,9 @@ import carequillDashboard3 from "@/assets/case_studies/carequill_ai_dashboard3.s
 import carequillCalendar from "@/assets/case_studies/carequill_ai_calendar.svg";
 import chatgioptApp from "@/assets/case_studies/chatgiopt_app.png";
 import chatgioptDesign from "@/assets/case_studies/chatgiopt_design.png";
+import type { RootProjectId } from "@/lib/root-navigation";
 
-type ProductId = "gum" | "flowfree" | "rendesco" | "giving" | "carequill" | "chatgiopt";
+type ProductId = RootProjectId | "flowfree";
 
 type ProductProof = { value: string; label: string };
 
@@ -514,8 +515,10 @@ function ProductPanel({ product }: { product: PortfolioProduct }) {
   );
 }
 
-export default function ProductsSection() {
-  const [selectedProductId, setSelectedProductId] = useState<ProductId>("rendesco");
+export default function ProductsSection({ selectedProductId, onProductChange }: {
+  selectedProductId: RootProjectId;
+  onProductChange: (product: RootProjectId) => void;
+}) {
   const selectedProduct = products.find((product) => product.id === selectedProductId) ?? products[0];
   return (
     <section id="products" className="scroll-mt-6 border-t border-[#e2dbd3] bg-[rgb(241,238,233)] py-8 text-left sm:py-8 dark:border-[#443b34] dark:bg-background">
@@ -528,7 +531,9 @@ export default function ProductsSection() {
           {/* <p className="mb-1 max-w-96 text-xs leading-[1.8] text-[#706c67] dark:text-muted-foreground md:justify-self-end lg:text-sm">Selected product engineering work spanning independently launched products and cross-functional teams, with a focus on wellbeing, clean energy, social impact and play.</p> */}
         </div>
 
-        <Tabs value={selectedProductId} onValueChange={(value) => setSelectedProductId(value as ProductId)} orientation="vertical" className="gap-0">
+        <Tabs value={selectedProductId} onValueChange={(value) => {
+          if (products.some(product => product.id === value)) onProductChange(value as RootProjectId);
+        }} orientation="vertical" className="gap-0">
           <div className="grid gap-4 md:grid-cols-[minmax(145px,.7fr)_minmax(0,2fr)] md:gap-6 lg:grid-cols-[minmax(155px,.72fr)_minmax(0,2.2fr)] lg:gap-8">
             <TabsList aria-label="Select a product" className="h-auto w-full flex-row items-stretch justify-start overflow-x-auto rounded-none border-0 border-b border-[#ded7ce] bg-transparent p-0 md:col-start-1 md:flex-col md:overflow-visible md:border-b-0 md:pr-3">
               {products.map((product) => (
